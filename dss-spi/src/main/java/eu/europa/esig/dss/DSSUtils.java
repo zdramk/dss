@@ -57,7 +57,6 @@ import java.util.TimeZone;
 
 import javax.security.auth.x500.X500Principal;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.jcajce.JcaMiscPEMGenerator;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
@@ -73,7 +72,7 @@ public final class DSSUtils {
 
 	private static final Logger LOG = LoggerFactory.getLogger(DSSUtils.class);
 
-	private static final BouncyCastleProvider securityProvider = new BouncyCastleProvider();
+	private static final Provider securityProvider = DSSProvider.getInstance();
 
 	public static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 
@@ -83,10 +82,6 @@ public final class DSSUtils {
 	 * The default date pattern: "yyyy-MM-dd"
 	 */
 	public static final String DEFAULT_DATE_FORMAT = "yyyy-MM-dd";
-
-	static {
-		Security.addProvider(securityProvider);
-	}
 
 	/**
 	 * This class is an utility class and cannot be instantiated.
@@ -183,8 +178,24 @@ public final class DSSUtils {
 	 * @return the certificate token
 	 */
 	public static CertificateToken loadCertificate(final String path) throws DSSException {
+		return loadCertificate(path, securityProvider);
+	}
+
+	/**
+	 * This method loads a certificate from the given resource. The certificate must be DER-encoded and may be supplied
+	 * in binary or printable (PEM / Base64) encoding.
+	 * <p>
+	 * If the certificate is provided in Base64 encoding, it must be bounded at the beginning by
+	 * {@code -----BEGIN CERTIFICATE-----}, and must be bounded at the end by {@code -----END CERTIFICATE-----}.
+	 *
+	 * @param path                   resource location.
+	 * @param customSecurityProvider custom security provider
+	 * @return the certificate token
+	 */
+	public static CertificateToken loadCertificate(final String path,
+												   final Provider customSecurityProvider) throws DSSException {
 		final InputStream inputStream = DSSUtils.class.getResourceAsStream(path);
-		return loadCertificate(inputStream);
+		return loadCertificate(inputStream, customSecurityProvider);
 	}
 
 	/**
@@ -201,8 +212,28 @@ public final class DSSUtils {
 	 *             if the certificate cannot be loaded
 	 */
 	public static CertificateToken loadCertificate(final File file) throws DSSException {
+		return loadCertificate(file, securityProvider);
+	}
+
+	/**
+	 * This method loads a certificate from the given location. The certificate must be DER-encoded and may be supplied
+	 * in binary or printable (PEM / Base64) encoding.
+	 *
+	 * If the certificate is provided in Base64 encoding, it must be bounded at the beginning by
+	 * {@code -----BEGIN CERTIFICATE-----}, and must be bounded at the end by {@code -----END CERTIFICATE-----}.
+	 *
+	 * @param file
+	 *            the file with the certificate
+	 *
+	 * @param customSecurityProvider custom security provider
+	 * @return the certificate token
+	 * @throws DSSException
+	 *             if the certificate cannot be loaded
+	 */
+	public static CertificateToken loadCertificate(final File file,
+												   final Provider customSecurityProvider) throws DSSException {
 		final InputStream inputStream = DSSUtils.toByteArrayInputStream(file);
-		final CertificateToken x509Certificate = loadCertificate(inputStream);
+		final CertificateToken x509Certificate = loadCertificate(inputStream, customSecurityProvider);
 		return x509Certificate;
 	}
 
@@ -220,7 +251,24 @@ public final class DSSUtils {
 	 *             if the certificate cannot be loaded
 	 */
 	public static CertificateToken loadCertificate(final InputStream inputStream) throws DSSException {
-		List<CertificateToken> certificates = loadCertificates(inputStream);
+		return loadCertificate(inputStream, securityProvider);
+	}
+
+	/**
+	 * This method loads a certificate from the given location. The certificate must be DER-encoded and may be supplied
+	 * in binary or printable (PEM / Base64) encoding.
+	 * <p>
+	 * If the certificate is provided in Base64 encoding, it must be bounded at the beginning by
+	 * {@code -----BEGIN CERTIFICATE-----}, and must be bounded at the end by {@code -----END CERTIFICATE-----}.
+	 *
+	 * @param inputStream            input stream containing the certificate
+	 * @param customSecurityProvider custom security provider
+	 * @return the certificate token
+	 * @throws DSSException if the certificate cannot be loaded
+	 */
+	public static CertificateToken loadCertificate(final InputStream inputStream,
+												   Provider customSecurityProvider) throws DSSException {
+		List<CertificateToken> certificates = loadCertificates(inputStream, customSecurityProvider);
 		if (certificates.size() == 1) {
 			return certificates.get(0);
 		}
@@ -228,15 +276,21 @@ public final class DSSUtils {
 	}
 
 	public static Collection<CertificateToken> loadCertificateFromP7c(InputStream is) {
-		return loadCertificates(is);
+		return loadCertificateFromP7c(is, securityProvider);
 	}
 
-	private static List<CertificateToken> loadCertificates(InputStream is) {
+	public static Collection<CertificateToken> loadCertificateFromP7c(InputStream is, final Provider customSecurityProvider) {
+		return loadCertificates(is, customSecurityProvider);
+	}
+
+	private static List<CertificateToken> loadCertificates(InputStream is, Provider givenSecurityProvider) {
 		final List<CertificateToken> certificates = new ArrayList<CertificateToken>();
 		try {
 			@SuppressWarnings("unchecked")
-			final Collection<X509Certificate> certificatesCollection = (Collection<X509Certificate>) CertificateFactory
-					.getInstance("X.509", BouncyCastleProvider.PROVIDER_NAME).generateCertificates(is);
+			final Collection<X509Certificate> certificatesCollection =
+				(Collection<X509Certificate>)
+					CertificateFactory.getInstance("X.509", givenSecurityProvider)
+					.generateCertificates(is);
 			if (certificatesCollection != null) {
 				for (X509Certificate cert : certificatesCollection) {
 					certificates.add(new CertificateToken(cert));
@@ -265,11 +319,29 @@ public final class DSSUtils {
 	 * @return the certificate token
 	 */
 	public static CertificateToken loadCertificate(final byte[] input) throws DSSException {
+		return loadCertificate(input, securityProvider);
+	}
+
+	/**
+	 * This method loads a certificate from the byte array. The certificate must be DER-encoded and may be supplied in
+	 * binary or printable
+	 * (Base64) encoding. If the certificate is provided in Base64 encoding, it must be bounded at the beginning by
+	 * -----BEGIN CERTIFICATE-----, and
+	 * must be bounded at the end by -----END CERTIFICATE-----. It throws an {@code DSSException} or return {@code null}
+	 * when the
+	 * certificate cannot be loaded.
+	 *
+	 * @param input            array of bytes containing the certificate
+	 * @param securityProvider custom security provider
+	 * @return the certificate token
+	 */
+	public static CertificateToken loadCertificate(final byte[] input,
+												   final Provider securityProvider) throws DSSException {
 		if (input == null) {
 			throw new NullPointerException("X509 certificate");
 		}
 		try (ByteArrayInputStream inputStream = new ByteArrayInputStream(input)) {
-			return loadCertificate(inputStream);
+			return loadCertificate(inputStream, securityProvider);
 		} catch (IOException e) {
 			throw new DSSException(e);
 		}
@@ -283,20 +355,51 @@ public final class DSSUtils {
 	 * @return the certificate token
 	 */
 	public static CertificateToken loadCertificateFromBase64EncodedString(final String base64Encoded) {
+		return loadCertificateFromBase64EncodedString(base64Encoded, securityProvider);
+	}
+
+
+	/**
+	 * This method loads a certificate from a base 64 encoded String
+	 *
+	 * @param base64Encoded    the base64 encoded certificate
+	 * @param securityProvider custom security provider
+	 * @return the certificate token
+	 */
+	public static CertificateToken loadCertificateFromBase64EncodedString(final String base64Encoded,
+																		  final Provider securityProvider) {
 		final byte[] bytes = Utils.fromBase64(base64Encoded);
-		return loadCertificate(bytes);
+		return loadCertificate(bytes, securityProvider);
 	}
 
 	/**
 	 * This method loads the potential issuer certificate(s) from the given locations (AIA).
-	 * 
+	 *
 	 * @param cert
 	 *            certificate for which the issuer(s) should be loaded
 	 * @param loader
 	 *            the data loader to use
 	 * @return a list of potential issuers
 	 */
-	public static Collection<CertificateToken> loadPotentialIssuerCertificates(final CertificateToken cert, final DataLoader loader) {
+	public static Collection<CertificateToken> loadPotentialIssuerCertificates(final CertificateToken cert,
+																			   final DataLoader loader) {
+		return loadPotentialIssuerCertificates(cert, loader, securityProvider);
+	}
+
+
+	/**
+	 * This method loads the potential issuer certificate(s) from the given locations (AIA).
+	 *
+	 * @param cert
+	 *            certificate for which the issuer(s) should be loaded
+	 * @param loader
+	 *            the data loader to use
+	 * @param customSecurityProvider custom security provider
+	 * @return a list of potential issuers
+	 */
+	public static Collection<CertificateToken> loadPotentialIssuerCertificates(final CertificateToken cert,
+																			   final DataLoader loader,
+																			   final Provider customSecurityProvider) {
 		List<String> urls = DSSASN1Utils.getCAAccessLocations(cert);
 
 		if (Utils.isCollectionEmpty(urls)) {
@@ -320,7 +423,7 @@ public final class DSSUtils {
 			if (Utils.isArrayNotEmpty(bytes)) {
 				LOG.debug("Base64 content : {}", Utils.toBase64(bytes));
 				try (InputStream is = new ByteArrayInputStream(bytes)) {
-					return loadCertificates(is);
+					return loadCertificates(is, customSecurityProvider);
 				} catch (Exception e) {
 					LOG.warn("Unable to parse certificate(s) from AIA (url: {}) : {}", url, e.getMessage());
 				}
@@ -369,9 +472,7 @@ public final class DSSUtils {
 	 */
 	public static MessageDigest getMessageDigest(final DigestAlgorithm digestAlgorithm) {
 		try {
-			final String digestAlgorithmOid = digestAlgorithm.getOid();
-			final MessageDigest messageDigest = MessageDigest.getInstance(digestAlgorithmOid, BouncyCastleProvider.PROVIDER_NAME);
-			return messageDigest;
+			return digestAlgorithm.getAlgorithmInstance();
 		} catch (GeneralSecurityException e) {
 			throw new DSSException("Digest algorithm '" + digestAlgorithm.getName() + "' error: " + e.getMessage(), e);
 		}

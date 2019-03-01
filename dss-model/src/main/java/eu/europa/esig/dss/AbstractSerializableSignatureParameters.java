@@ -21,6 +21,7 @@
 package eu.europa.esig.dss;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Parameters for a Signature creation/extension
@@ -387,10 +388,10 @@ public abstract class AbstractSerializableSignatureParameters implements Seriali
 		} else if (!contentTimestampParameters.equals(other.contentTimestampParameters)) {
 			return false;
 		}
-		if (digestAlgorithm != other.digestAlgorithm) {
+		if (!Objects.equals(digestAlgorithm, other.digestAlgorithm)) {
 			return false;
 		}
-		if (encryptionAlgorithm != other.encryptionAlgorithm) {
+		if (!Objects.equals(encryptionAlgorithm, other.encryptionAlgorithm)) {
 			return false;
 		}
 		if (signWithExpiredCertificate != other.signWithExpiredCertificate) {
@@ -399,7 +400,7 @@ public abstract class AbstractSerializableSignatureParameters implements Seriali
 		if (generateTBSWithoutCertificate != other.generateTBSWithoutCertificate) {
 			return false;
 		}
-		if (signatureAlgorithm != other.signatureAlgorithm) {
+		if (!Objects.equals(signatureAlgorithm, other.signatureAlgorithm)) {
 			return false;
 		}
 		if (signatureLevel != other.signatureLevel) {

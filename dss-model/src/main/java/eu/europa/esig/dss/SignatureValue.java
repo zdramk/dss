@@ -22,6 +22,7 @@ package eu.europa.esig.dss;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Objects;
 
 @SuppressWarnings("serial")
 public final class SignatureValue implements Serializable {
@@ -55,33 +56,18 @@ public final class SignatureValue implements Serializable {
 	}
 
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = (prime * result) + ((algorithm == null) ? 0 : algorithm.hashCode());
-		result = (prime * result) + Arrays.hashCode(value);
-		return result;
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		SignatureValue that = (SignatureValue) o;
+		return Objects.equals(algorithm, that.algorithm) &&
+			Arrays.equals(value, that.value);
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (obj == null) {
-			return false;
-		}
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
-		SignatureValue other = (SignatureValue) obj;
-		if (algorithm != other.algorithm) {
-			return false;
-		}
-		if (!Arrays.equals(value, other.value)) {
-			return false;
-		}
-		return true;
+	public int hashCode() {
+		int result = Objects.hash(algorithm);
+		result = 31 * result + Arrays.hashCode(value);
+		return result;
 	}
-
 }

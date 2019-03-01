@@ -20,37 +20,45 @@
  */
 package eu.europa.esig.dss;
 
-import java.util.HashMap;
+import java.io.Serializable;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Supported signature encryption algorithms.
  */
-public enum EncryptionAlgorithm {
+public class EncryptionAlgorithm implements Serializable {
 
-	RSA("RSA", "1.2.840.113549.1.1.1", "RSA/ECB/PKCS1Padding"),
+	private static final Map<String, EncryptionAlgorithm> OID_ALGORITHMS = new ConcurrentHashMap<>();
+	private static final Map<String, EncryptionAlgorithm> NAME_ALGORITHMS = new ConcurrentHashMap<>();
 
-	DSA("DSA", "1.2.840.10040.4.1", "DSA"),
+	public static EncryptionAlgorithm RSA = register("RSA",
+		"1.2.840.113549.1.1.1", "RSA/ECB/PKCS1Padding", DSSProvider.PROVIDER_NAME);
 
-	ECDSA("ECDSA", "1.2.840.10045.2.1", "ECDSA"),
+	public static EncryptionAlgorithm DSA = register("DSA",
+		"1.2.840.10040.4.1", "DSA", DSSProvider.PROVIDER_NAME);
 
-	HMAC("HMAC", "", "");
+	public static EncryptionAlgorithm ECDSA =
+		withAlias("ECC",
+			withAlias("EC",
+				register("ECDSA",
+					"1.2.840.10045.2.1", "ECDSA", DSSProvider.PROVIDER_NAME)));
+
+	public static EncryptionAlgorithm HMAC = register("HMAC",
+		"", "", DSSProvider.PROVIDER_NAME);
 
 	private String name;
 	private String oid;
 	private String padding;
+	private String providerName;
 
-	private static class Registry {
-
-		private static final Map<String, EncryptionAlgorithm> OID_ALGORITHMS = registerOIDAlgorithms();
-
-		private static Map<String, EncryptionAlgorithm> registerOIDAlgorithms() {
-			Map<String, EncryptionAlgorithm> map = new HashMap<String, EncryptionAlgorithm>();
-			for (EncryptionAlgorithm encryptionAlgorithm : values()) {
-				map.put(encryptionAlgorithm.oid, encryptionAlgorithm);
-			}
-			return map;
-		}
+	public static EncryptionAlgorithm withAlias(String alias, EncryptionAlgorithm algorithm) {
+		NAME_ALGORITHMS.put(alias, algorithm);
+		return algorithm;
 	}
 
 	/**
@@ -63,7 +71,7 @@ public enum EncryptionAlgorithm {
 	 *             if the oid doesn't match any algorithm
 	 */
 	public static EncryptionAlgorithm forOID(String oid) throws DSSException {
-		EncryptionAlgorithm algorithm = Registry.OID_ALGORITHMS.get(oid);
+		EncryptionAlgorithm algorithm = OID_ALGORITHMS.get(oid);
 		if (algorithm == null) {
 			throw new DSSException("Unsupported algorithm: " + oid);
 		}
@@ -80,16 +88,11 @@ public enum EncryptionAlgorithm {
 	 *             if the name doesn't match any algorithm
 	 */
 	public static EncryptionAlgorithm forName(final String name) throws DSSException {
-		// To be checked if ECC exists also .
-		if ("EC".equals(name) || "ECC".equals(name)) {
-			return ECDSA;
-		}
-
-		try {
-			return valueOf(name);
-		} catch (Exception e) {
+		EncryptionAlgorithm algorithm = NAME_ALGORITHMS.get(name);
+		if (algorithm == null) {
 			throw new DSSException("Unsupported algorithm: " + name);
 		}
+		return algorithm;
 	}
 
 	/**
@@ -102,23 +105,35 @@ public enum EncryptionAlgorithm {
 	 * @return the corresponding {@code EncryptionAlgorithm} or the default value
 	 */
 	public static EncryptionAlgorithm forName(final String name, final EncryptionAlgorithm defaultValue) {
-		// To be checked if ECC exists also .
-		if ("EC".equals(name) || "ECC".equals(name)) {
-			return ECDSA;
-		}
-
-		try {
-			final EncryptionAlgorithm encryptionAlgorithm = valueOf(name);
-			return encryptionAlgorithm;
-		} catch (Exception e) {
+		EncryptionAlgorithm algorithm = NAME_ALGORITHMS.get(name);
+		if (algorithm == null) {
 			return defaultValue;
 		}
+		return algorithm;
 	}
 
-	private EncryptionAlgorithm(String name, String oid, String padding) {
+	public static EncryptionAlgorithm register(final String name, final String oid,
+											   final String padding, final String providerName) {
+		return new EncryptionAlgorithm(name, oid, padding, providerName);
+	}
+
+	private EncryptionAlgorithm(String name, String oid, String padding, String providerName) {
 		this.name = name;
 		this.oid = oid;
 		this.padding = padding;
+		this.providerName = providerName;
+
+		OID_ALGORITHMS.put(oid, this);
+		NAME_ALGORITHMS.put(name, this);
+	}
+
+
+	public KeyPairGenerator getAlgorithmInstance() throws NoSuchAlgorithmException {
+		try {
+			return KeyPairGenerator.getInstance(getName(), getProviderName());
+		} catch (NoSuchProviderException e) {
+			return KeyPairGenerator.getInstance(name);
+		}
 	}
 
 	/**
@@ -148,4 +163,32 @@ public enum EncryptionAlgorithm {
 		return padding;
 	}
 
+	/**
+	 * Returns security provider name that provides algorithm implementation
+	 * @return provider name
+	 */
+	public String getProviderName() {
+		return providerName;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		EncryptionAlgorithm that = (EncryptionAlgorithm) o;
+		return Objects.equals(name, that.name) &&
+			Objects.equals(oid, that.oid) &&
+			Objects.equals(padding, that.padding) &&
+			Objects.equals(providerName, that.providerName);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(name, oid, padding, providerName);
+	}
+
+	@Override
+	public String toString() {
+		return name;
+	}
 }

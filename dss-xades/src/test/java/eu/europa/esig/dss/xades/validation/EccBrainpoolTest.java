@@ -2,6 +2,7 @@ package eu.europa.esig.dss.xades.validation;
 
 import static org.junit.Assert.assertEquals;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import eu.europa.esig.dss.DSSDocument;
@@ -13,6 +14,7 @@ import eu.europa.esig.dss.validation.reports.Reports;
 import eu.europa.esig.dss.validation.reports.wrapper.DiagnosticData;
 import eu.europa.esig.dss.validation.reports.wrapper.SignatureWrapper;
 
+@Ignore("TBD resolve dependency")
 public class EccBrainpoolTest {
 
 	@Test

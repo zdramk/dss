@@ -36,7 +36,6 @@ import org.bouncycastle.cert.ocsp.CertificateID;
 import org.bouncycastle.cert.ocsp.OCSPException;
 import org.bouncycastle.cert.ocsp.OCSPResp;
 import org.bouncycastle.cert.ocsp.SingleResp;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.DigestCalculator;
 import org.bouncycastle.operator.DigestCalculatorProvider;
 import org.bouncycastle.operator.OperatorCreationException;
@@ -55,7 +54,7 @@ public final class DSSRevocationUtils {
 
 	static {
 		jcaDigestCalculatorProviderBuilder = new JcaDigestCalculatorProviderBuilder();
-		jcaDigestCalculatorProviderBuilder.setProvider(BouncyCastleProvider.PROVIDER_NAME);
+		jcaDigestCalculatorProviderBuilder.setProvider(DSSProvider.PROVIDER_NAME);
 	}
 
 	private DSSRevocationUtils() {

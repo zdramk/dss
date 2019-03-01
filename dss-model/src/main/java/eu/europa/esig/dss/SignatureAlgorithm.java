@@ -20,115 +20,362 @@
  */
 package eu.europa.esig.dss;
 
-import java.util.HashMap;
+import java.io.Serializable;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.Signature;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Supported signature algorithms.
  *
  */
-public enum SignatureAlgorithm {
+public class SignatureAlgorithm implements Serializable {
 
-	RSA_SHA1(EncryptionAlgorithm.RSA, DigestAlgorithm.SHA1),
+	private static final Map<String, SignatureAlgorithm> NAME_ALGORITHMS = new ConcurrentHashMap<>();
 
-	RSA_SHA224(EncryptionAlgorithm.RSA, DigestAlgorithm.SHA224),
+	private static final Map<String, SignatureAlgorithm> XML_ALGORITHMS = new ConcurrentHashMap<>();
 
-	RSA_SHA256(EncryptionAlgorithm.RSA, DigestAlgorithm.SHA256),
+	private static final Map<SignatureAlgorithm, String> XML_ALGORITHMS_FOR_KEY = new ConcurrentHashMap<>();
 
-	RSA_SHA384(EncryptionAlgorithm.RSA, DigestAlgorithm.SHA384),
+	private static final Map<String, SignatureAlgorithm> OID_ALGORITHMS = new ConcurrentHashMap<>();
 
-	RSA_SHA512(EncryptionAlgorithm.RSA, DigestAlgorithm.SHA512),
+	private static final Map<String, SignatureAlgorithm> JAVA_ALGORITHMS = new ConcurrentHashMap<>();
 
-	RSA_SHA3_224(EncryptionAlgorithm.RSA, DigestAlgorithm.SHA3_224),
+	private static final Map<SignatureAlgorithm, String> JAVA_ALGORITHMS_FOR_KEY = new ConcurrentHashMap<>();
 
-	RSA_SHA3_256(EncryptionAlgorithm.RSA, DigestAlgorithm.SHA3_256),
+	public static SignatureAlgorithm RSA_SHA1 =
+		withJAVA("SHA1withRSA",
+			withOID("1.3.14.3.2.29",
+				withOID("1.2.840.113549.1.1.5",
+					withXML("http://www.w3.org/2000/09/xmldsig#rsa-sha1",
+						register("RSA_SHA1",
+							EncryptionAlgorithm.RSA, DigestAlgorithm.SHA1, DSSProvider.PROVIDER_NAME))))),
 
-	RSA_SHA3_384(EncryptionAlgorithm.RSA, DigestAlgorithm.SHA3_384),
+	RSA_SHA224 =
+		withJAVA("SHA224withRSA",
+			withOID("1.2.840.113549.1.1.14",
+				withXML("http://www.w3.org/2001/04/xmldsig-more#rsa-sha224",
+					register("RSA_SHA224",
+						EncryptionAlgorithm.RSA, DigestAlgorithm.SHA224, DSSProvider.PROVIDER_NAME)))),
 
-	RSA_SHA3_512(EncryptionAlgorithm.RSA, DigestAlgorithm.SHA3_512),
+	RSA_SHA256 =
+		withJAVA("SHA256withRSA",
+			withOID("1.2.840.113549.1.1.11",
+				withXML("http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
+					register("RSA_SHA256",
+						EncryptionAlgorithm.RSA, DigestAlgorithm.SHA256, DSSProvider.PROVIDER_NAME)))),
 
-	RSA_SSA_PSS_SHA1_MGF1(EncryptionAlgorithm.RSA, DigestAlgorithm.SHA1, MaskGenerationFunction.MGF1),
+	RSA_SHA384 =
+		withJAVA("SHA384withRSA",
+			withOID("1.2.840.113549.1.1.12",
+				withXML("http://www.w3.org/2001/04/xmldsig-more#rsa-sha384",
+					register("RSA_SHA384",
+						EncryptionAlgorithm.RSA, DigestAlgorithm.SHA384, DSSProvider.PROVIDER_NAME)))),
 
-	RSA_SSA_PSS_SHA224_MGF1(EncryptionAlgorithm.RSA, DigestAlgorithm.SHA224, MaskGenerationFunction.MGF1),
+	RSA_SHA512 =
+		withJAVA("SHA512withRSA",
+			withOID("1.2.840.113549.1.1.13",
+				withXML("http://www.w3.org/2001/04/xmldsig-more#rsa-sha512",
+					register("RSA_SHA512",
+						EncryptionAlgorithm.RSA, DigestAlgorithm.SHA512, DSSProvider.PROVIDER_NAME)))),
 
-	RSA_SSA_PSS_SHA256_MGF1(EncryptionAlgorithm.RSA, DigestAlgorithm.SHA256, MaskGenerationFunction.MGF1),
+	RSA_SHA3_224 =
+		withJAVA("SHA3-224withRSA",
+			withOID("2.16.840.1.101.3.4.3.13",
+				register("RSA_SHA3_224",
+					EncryptionAlgorithm.RSA, DigestAlgorithm.SHA3_224, DSSProvider.PROVIDER_NAME))),
 
-	RSA_SSA_PSS_SHA384_MGF1(EncryptionAlgorithm.RSA, DigestAlgorithm.SHA384, MaskGenerationFunction.MGF1),
+	RSA_SHA3_256 =
+		withJAVA("SHA3-256withRSA",
+			withOID("2.16.840.1.101.3.4.3.14",
+				register("RSA_SHA3_256",
+					EncryptionAlgorithm.RSA, DigestAlgorithm.SHA3_256, DSSProvider.PROVIDER_NAME))),
 
-	RSA_SSA_PSS_SHA512_MGF1(EncryptionAlgorithm.RSA, DigestAlgorithm.SHA512, MaskGenerationFunction.MGF1),
+	RSA_SHA3_384 =
+		withJAVA("SHA3-384withRSA",
+			withOID("2.16.840.1.101.3.4.3.15",
+				register("RSA_SHA3_384",
+					EncryptionAlgorithm.RSA, DigestAlgorithm.SHA3_384, DSSProvider.PROVIDER_NAME))),
 
-	RSA_SSA_PSS_SHA3_224_MGF1(EncryptionAlgorithm.RSA, DigestAlgorithm.SHA3_224, MaskGenerationFunction.MGF1),
+	RSA_SHA3_512 =
+		withJAVA("SHA3-512withRSA",
+			withOID("2.16.840.1.101.3.4.3.16",
+				register("RSA_SHA3_512",
+					EncryptionAlgorithm.RSA, DigestAlgorithm.SHA3_512, DSSProvider.PROVIDER_NAME))),
 
-	RSA_SSA_PSS_SHA3_256_MGF1(EncryptionAlgorithm.RSA, DigestAlgorithm.SHA3_256, MaskGenerationFunction.MGF1),
+	RSA_SSA_PSS_SHA1_MGF1 =
+		withJAVA("SHA1withRSAandMGF1",
+			withOID("1.2.840.113549.1.1.10",
+				withXML("http://www.w3.org/2007/05/xmldsig-more#sha1-rsa-MGF1",
+					register("RSA_SSA_PSS_SHA1_MGF1",
+						EncryptionAlgorithm.RSA, DigestAlgorithm.SHA1, MaskGenerationFunction.MGF1, DSSProvider.PROVIDER_NAME)))),
 
-	RSA_SSA_PSS_SHA3_384_MGF1(EncryptionAlgorithm.RSA, DigestAlgorithm.SHA3_384, MaskGenerationFunction.MGF1),
+	RSA_SSA_PSS_SHA224_MGF1 =
+		withJAVA("SHA224withRSAandMGF1",
+			withXML("http://www.w3.org/2007/05/xmldsig-more#sha224-rsa-MGF1",
+				register("RSA_SSA_PSS_SHA224_MGF1",
+					EncryptionAlgorithm.RSA, DigestAlgorithm.SHA224, MaskGenerationFunction.MGF1, DSSProvider.PROVIDER_NAME))),
 
-	RSA_SSA_PSS_SHA3_512_MGF1(EncryptionAlgorithm.RSA, DigestAlgorithm.SHA3_512, MaskGenerationFunction.MGF1),
+	RSA_SSA_PSS_SHA256_MGF1 =
+		withJAVA("SHA256withRSAandMGF1",
+			withXML("http://www.w3.org/2007/05/xmldsig-more#sha256-rsa-MGF1",
+				register("RSA_SSA_PSS_SHA256_MGF1",
+					EncryptionAlgorithm.RSA, DigestAlgorithm.SHA256, MaskGenerationFunction.MGF1, DSSProvider.PROVIDER_NAME))),
 
-	RSA_RIPEMD160(EncryptionAlgorithm.RSA, DigestAlgorithm.RIPEMD160),
+	RSA_SSA_PSS_SHA384_MGF1 =
+		withJAVA("SHA384withRSAandMGF1",
+			withXML("http://www.w3.org/2007/05/xmldsig-more#sha384-rsa-MGF1",
+				register("RSA_SSA_PSS_SHA384_MGF1",
+					EncryptionAlgorithm.RSA, DigestAlgorithm.SHA384, MaskGenerationFunction.MGF1, DSSProvider.PROVIDER_NAME))),
 
-	RSA_MD5(EncryptionAlgorithm.RSA, DigestAlgorithm.MD5),
+	RSA_SSA_PSS_SHA512_MGF1 =
+		withJAVA("SHA512withRSAandMGF1",
+			withXML("http://www.w3.org/2007/05/xmldsig-more#sha512-rsa-MGF1",
+				register("RSA_SSA_PSS_SHA512_MGF1",
+					EncryptionAlgorithm.RSA, DigestAlgorithm.SHA512, MaskGenerationFunction.MGF1, DSSProvider.PROVIDER_NAME))),
 
-	RSA_MD2(EncryptionAlgorithm.RSA, DigestAlgorithm.MD2),
+	RSA_SSA_PSS_SHA3_224_MGF1 =
+		withJAVA("SHA3-224withRSAandMGF1",
+			withXML("http://www.w3.org/2007/05/xmldsig-more#sha3-224-rsa-MGF1",
+				register("RSA_SSA_PSS_SHA3_224_MGF1",
+					EncryptionAlgorithm.RSA, DigestAlgorithm.SHA3_224, MaskGenerationFunction.MGF1, DSSProvider.PROVIDER_NAME))),
 
-	ECDSA_SHA1(EncryptionAlgorithm.ECDSA, DigestAlgorithm.SHA1),
+	RSA_SSA_PSS_SHA3_256_MGF1 =
+		withJAVA("SHA3-256withRSAandMGF1",
+			withXML("http://www.w3.org/2007/05/xmldsig-more#sha3-256-rsa-MGF1",
+				register("RSA_SSA_PSS_SHA3_256_MGF1",
+					EncryptionAlgorithm.RSA, DigestAlgorithm.SHA3_256, MaskGenerationFunction.MGF1, DSSProvider.PROVIDER_NAME))),
 
-	ECDSA_SHA224(EncryptionAlgorithm.ECDSA, DigestAlgorithm.SHA224),
+	RSA_SSA_PSS_SHA3_384_MGF1 =
+		withJAVA("SHA3-384withRSAandMGF1",
+			withXML("http://www.w3.org/2007/05/xmldsig-more#sha3-384-rsa-MGF1",
+				register("RSA_SSA_PSS_SHA3_384_MGF1",
+					EncryptionAlgorithm.RSA, DigestAlgorithm.SHA3_384, MaskGenerationFunction.MGF1, DSSProvider.PROVIDER_NAME))),
 
-	ECDSA_SHA256(EncryptionAlgorithm.ECDSA, DigestAlgorithm.SHA256),
+	RSA_SSA_PSS_SHA3_512_MGF1 =
+		withJAVA("SHA3-512withRSAandMGF1",
+			withXML("http://www.w3.org/2007/05/xmldsig-more#sha3-512-rsa-MGF1",
+				register("RSA_SSA_PSS_SHA3_512_MGF1",
+					EncryptionAlgorithm.RSA, DigestAlgorithm.SHA3_512, MaskGenerationFunction.MGF1, DSSProvider.PROVIDER_NAME))),
 
-	ECDSA_SHA384(EncryptionAlgorithm.ECDSA, DigestAlgorithm.SHA384),
+	RSA_RIPEMD160 =
+		withJAVA("RIPEMD160withRSA",
+			withOID("1.3.36.3.3.1.2",
+				withXML("http://www.w3.org/2001/04/xmldsig-more/rsa-ripemd160",
+					withXML("http://www.w3.org/2001/04/xmldsig-more#rsa-ripemd160",
+						register("RSA_RIPEMD160",
+							EncryptionAlgorithm.RSA, DigestAlgorithm.RIPEMD160, DSSProvider.PROVIDER_NAME))))),
 
-	ECDSA_SHA512(EncryptionAlgorithm.ECDSA, DigestAlgorithm.SHA512),
+	RSA_MD5 =
+		withJAVA("MD5withRSA",
+			withOID("1.2.840.113549.1.1.4",
+				withXML("http://www.w3.org/2001/04/xmldsig-more#rsa-md5",
+					register("RSA_MD5",
+						EncryptionAlgorithm.RSA, DigestAlgorithm.MD5, DSSProvider.PROVIDER_NAME)))),
 
-	ECDSA_SHA3_224(EncryptionAlgorithm.ECDSA, DigestAlgorithm.SHA3_224),
+	RSA_MD2 =
+		withJAVA("MD2withRSA",
+			withOID("1.2.840.113549.1.1.2",
+				withXML("http://www.w3.org/2001/04/xmldsig-more#rsa-md2",
+					register("RSA_MD2",
+						EncryptionAlgorithm.RSA, DigestAlgorithm.MD2, DSSProvider.PROVIDER_NAME)))),
 
-	ECDSA_SHA3_256(EncryptionAlgorithm.ECDSA, DigestAlgorithm.SHA3_256),
+	ECDSA_SHA1 =
+		withJAVA("SHA1withECDSA",
+			withOID("1.2.840.10045.4.1",
+				withXML("http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha1",
+					register("ECDSA_SHA1",
+						EncryptionAlgorithm.ECDSA, DigestAlgorithm.SHA1, DSSProvider.PROVIDER_NAME)))),
 
-	ECDSA_SHA3_384(EncryptionAlgorithm.ECDSA, DigestAlgorithm.SHA3_384),
+	ECDSA_SHA224 =
+		withJAVA("SHA224withECDSA",
+			withOID("1.2.840.10045.4.3.1",
+				withXML("http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha224",
+					register("ECDSA_SHA224",
+						EncryptionAlgorithm.ECDSA, DigestAlgorithm.SHA224, DSSProvider.PROVIDER_NAME)))),
 
-	ECDSA_SHA3_512(EncryptionAlgorithm.ECDSA, DigestAlgorithm.SHA3_512),
+	ECDSA_SHA256 =
+		withJAVA("SHA256withECDSA",
+			withOID("1.2.840.10045.4.3.2",
+				withXML("http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha256",
+					register("ECDSA_SHA256",
+						EncryptionAlgorithm.ECDSA, DigestAlgorithm.SHA256, DSSProvider.PROVIDER_NAME)))),
 
-	ECDSA_RIPEMD160(EncryptionAlgorithm.ECDSA, DigestAlgorithm.RIPEMD160),
+	ECDSA_SHA384 =
+		withJAVA("SHA384withECDSA",
+			withOID("1.2.840.10045.4.3.3",
+				withXML("http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha384",
+					register("ECDSA_SHA384",
+						EncryptionAlgorithm.ECDSA, DigestAlgorithm.SHA384, DSSProvider.PROVIDER_NAME)))),
 
-	DSA_SHA1(EncryptionAlgorithm.DSA, DigestAlgorithm.SHA1),
+	ECDSA_SHA512 =
+		withJAVA("SHA512withECDSA",
+			withOID("1.2.840.10045.4.3.4",
+				withXML("http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha512",
+					register("ECDSA_SHA512",
+						EncryptionAlgorithm.ECDSA, DigestAlgorithm.SHA512, DSSProvider.PROVIDER_NAME)))),
 
-	DSA_SHA224(EncryptionAlgorithm.DSA, DigestAlgorithm.SHA224),
+	ECDSA_SHA3_224 =
+		withJAVA("SHA3-224withECDSA",
+			withOID("2.16.840.1.101.3.4.3.9",
+				register("ECDSA_SHA3_224",
+					EncryptionAlgorithm.ECDSA, DigestAlgorithm.SHA3_224, DSSProvider.PROVIDER_NAME))),
 
-	DSA_SHA256(EncryptionAlgorithm.DSA, DigestAlgorithm.SHA256),
+	ECDSA_SHA3_256 =
+		withJAVA("SHA3-256withECDSA",
+			withOID("2.16.840.1.101.3.4.3.10",
+				register("ECDSA_SHA3_256",
+					EncryptionAlgorithm.ECDSA, DigestAlgorithm.SHA3_256, DSSProvider.PROVIDER_NAME))),
 
-	DSA_SHA384(EncryptionAlgorithm.DSA, DigestAlgorithm.SHA384),
+	ECDSA_SHA3_384 =
+		withJAVA("SHA3-384withECDSA",
+			withOID("2.16.840.1.101.3.4.3.11",
+				register("ECDSA_SHA3_384",
+					EncryptionAlgorithm.ECDSA, DigestAlgorithm.SHA3_384, DSSProvider.PROVIDER_NAME))),
 
-	DSA_SHA512(EncryptionAlgorithm.DSA, DigestAlgorithm.SHA512),
+	ECDSA_SHA3_512 =
+		withJAVA("SHA3-512withECDSA",
+			withOID("2.16.840.1.101.3.4.3.12",
+				register("ECDSA_SHA3_512",
+					EncryptionAlgorithm.ECDSA, DigestAlgorithm.SHA3_512, DSSProvider.PROVIDER_NAME))),
 
-	DSA_SHA3_224(EncryptionAlgorithm.DSA, DigestAlgorithm.SHA3_224),
+	ECDSA_RIPEMD160 =
+		withJAVA("RIPEMD160withECDSA",
+			withOID("0.4.0.127.0.7.1.1.4.1.6",
+				withXML("http://www.w3.org/2007/05/xmldsig-more#ecdsa-ripemd160",
+					register("ECDSA_RIPEMD160",
+						EncryptionAlgorithm.ECDSA, DigestAlgorithm.RIPEMD160, DSSProvider.PROVIDER_NAME)))),
 
-	DSA_SHA3_256(EncryptionAlgorithm.DSA, DigestAlgorithm.SHA3_256),
+	DSA_SHA1 =
+		withJAVA("SHA1withDSA",
+			withOID("1.2.14888.3.0.1",
+				withOID("1.2.840.10040.4.3",
+					withXML("http://www.w3.org/2000/09/xmldsig#dsa-sha1",
+						register("DSA_SHA1",
+							EncryptionAlgorithm.DSA, DigestAlgorithm.SHA1, DSSProvider.PROVIDER_NAME))))),
 
-	DSA_SHA3_384(EncryptionAlgorithm.DSA, DigestAlgorithm.SHA3_384),
+	DSA_SHA224 =
+		withJAVA("SHA224withDSA",
+			withOID("2.16.840.1.101.3.4.3.1",
+				register("DSA_SHA224",
+					EncryptionAlgorithm.DSA, DigestAlgorithm.SHA224, DSSProvider.PROVIDER_NAME))),
 
-	DSA_SHA3_512(EncryptionAlgorithm.DSA, DigestAlgorithm.SHA3_512),
+	DSA_SHA256 =
+		withJAVA("SHA256withDSA",
+			withOID("2.16.840.1.101.3.4.3.2",
+				withXML("http://www.w3.org/2009/xmldsig11#dsa-sha256",
+					register("DSA_SHA256",
+						EncryptionAlgorithm.DSA, DigestAlgorithm.SHA256, DSSProvider.PROVIDER_NAME)))),
 
-	HMAC_SHA1(EncryptionAlgorithm.HMAC, DigestAlgorithm.SHA1),
+	DSA_SHA384 =
+		withJAVA("SHA384withDSA",
+			withOID("2.16.840.1.101.3.4.3.3",
+				register("DSA_SHA384",
+					EncryptionAlgorithm.DSA, DigestAlgorithm.SHA384, DSSProvider.PROVIDER_NAME))),
 
-	HMAC_SHA224(EncryptionAlgorithm.HMAC, DigestAlgorithm.SHA224),
+	DSA_SHA512 =
+		withJAVA("SHA512withDSA",
+			withOID("2.16.840.1.101.3.4.3.4",
+				register("DSA_SHA512",
+					EncryptionAlgorithm.DSA, DigestAlgorithm.SHA512, DSSProvider.PROVIDER_NAME))),
 
-	HMAC_SHA256(EncryptionAlgorithm.HMAC, DigestAlgorithm.SHA256),
+	DSA_SHA3_224 =
+		withJAVA("SHA3-224withDSA",
+			withOID("2.16.840.1.101.3.4.3.5",
+				register("DSA_SHA3_224",
+					EncryptionAlgorithm.DSA, DigestAlgorithm.SHA3_224, DSSProvider.PROVIDER_NAME))),
 
-	HMAC_SHA384(EncryptionAlgorithm.HMAC, DigestAlgorithm.SHA384),
+	DSA_SHA3_256 =
+		withJAVA("SHA3-256withDSA",
+			withOID("2.16.840.1.101.3.4.3.6",
+				register("DSA_SHA3_256",
+					EncryptionAlgorithm.DSA, DigestAlgorithm.SHA3_256, DSSProvider.PROVIDER_NAME))),
 
-	HMAC_SHA512(EncryptionAlgorithm.HMAC, DigestAlgorithm.SHA512),
+	DSA_SHA3_384 =
+		withJAVA("SHA3-384withDSA",
+			withOID("2.16.840.1.101.3.4.3.7",
+				register("DSA_SHA3_384",
+					EncryptionAlgorithm.DSA, DigestAlgorithm.SHA3_384, DSSProvider.PROVIDER_NAME))),
 
-	HMAC_SHA3_224(EncryptionAlgorithm.HMAC, DigestAlgorithm.SHA3_224),
+	DSA_SHA3_512 =
+		withJAVA("SHA3-512withDSA",
+			withOID("2.16.840.1.101.3.4.3.8",
+				register("DSA_SHA3_512",
+					EncryptionAlgorithm.DSA, DigestAlgorithm.SHA3_512, DSSProvider.PROVIDER_NAME))),
 
-	HMAC_SHA3_256(EncryptionAlgorithm.HMAC, DigestAlgorithm.SHA3_256),
+	HMAC_SHA1 =
+		withJAVA("SHA1withHMAC",
+			withOID("1.2.840.113549.2.7",
+				withXML("http://www.w3.org/2000/09/xmldsig#hmac-sha1",
+					register("HMAC_SHA1",
+						EncryptionAlgorithm.HMAC, DigestAlgorithm.SHA1, DSSProvider.PROVIDER_NAME)))),
 
-	HMAC_SHA3_384(EncryptionAlgorithm.HMAC, DigestAlgorithm.SHA3_384),
+	HMAC_SHA224 =
+		withJAVA("SHA224withHMAC",
+			withOID("1.2.840.113549.2.8",
+				withXML("http://www.w3.org/2001/04/xmldsig-more#hmac-sha224",
+					register("HMAC_SHA224",
+						EncryptionAlgorithm.HMAC, DigestAlgorithm.SHA224, DSSProvider.PROVIDER_NAME)))),
 
-	HMAC_SHA3_512(EncryptionAlgorithm.HMAC, DigestAlgorithm.SHA3_512),
+	HMAC_SHA256 =
+		withJAVA("SHA256withHMAC",
+			withOID("1.2.840.113549.2.9",
+				withXML("http://www.w3.org/2001/04/xmldsig-more#hmac-sha256",
+					register("HMAC_SHA256",
+						EncryptionAlgorithm.HMAC, DigestAlgorithm.SHA256, DSSProvider.PROVIDER_NAME)))),
 
-	HMAC_RIPEMD160(EncryptionAlgorithm.HMAC, DigestAlgorithm.RIPEMD160);
+	HMAC_SHA384 =
+		withJAVA("SHA384withHMAC",
+			withOID("1.2.840.113549.2.10",
+				withXML("http://www.w3.org/2001/04/xmldsig-more#hmac-sha384",
+					register("HMAC_SHA384",
+						EncryptionAlgorithm.HMAC, DigestAlgorithm.SHA384, DSSProvider.PROVIDER_NAME)))),
+
+	HMAC_SHA512 =
+		withJAVA("SHA512withHMAC",
+			withOID("1.2.840.113549.2.11",
+				withXML("http://www.w3.org/2001/04/xmldsig-more#hmac-sha512",
+					register("HMAC_SHA512",
+						EncryptionAlgorithm.HMAC, DigestAlgorithm.SHA512, DSSProvider.PROVIDER_NAME)))),
+
+	HMAC_SHA3_224 =
+		withJAVA("SHA3-224withHMAC",
+			withOID("2.16.840.1.101.3.4.2.13",
+				register("HMAC_SHA3_224",
+					EncryptionAlgorithm.HMAC, DigestAlgorithm.SHA3_224, DSSProvider.PROVIDER_NAME))),
+
+	HMAC_SHA3_256 =
+		withJAVA("SHA3-256withHMAC",
+			withOID("2.16.840.1.101.3.4.2.14",
+				register("HMAC_SHA3_256",
+					EncryptionAlgorithm.HMAC, DigestAlgorithm.SHA3_256, DSSProvider.PROVIDER_NAME))),
+
+	HMAC_SHA3_384 =
+		withJAVA("SHA3-384withHMAC",
+			withOID("2.16.840.1.101.3.4.2.15",
+				register("HMAC_SHA3_384",
+					EncryptionAlgorithm.HMAC, DigestAlgorithm.SHA3_384, DSSProvider.PROVIDER_NAME))),
+
+	HMAC_SHA3_512 =
+		withJAVA("SHA3-512withHMAC",
+			withOID("2.16.840.1.101.3.4.2.16",
+				register("HMAC_SHA3_512",
+					EncryptionAlgorithm.HMAC, DigestAlgorithm.SHA3_512, DSSProvider.PROVIDER_NAME))),
+
+	HMAC_RIPEMD160 =
+		withJAVA("RIPEMD160withHMAC",
+			withOID("1.3.6.1.5.5.8.1.4",
+				withXML("http://www.w3.org/2001/04/xmldsig-more#hmac-ripemd160",
+					register("HMAC_RIPEMD160",
+						EncryptionAlgorithm.HMAC, DigestAlgorithm.RIPEMD160, DSSProvider.PROVIDER_NAME))));
+
+	private final String name;
 
 	private final EncryptionAlgorithm encryptionAlgo;
 
@@ -136,229 +383,25 @@ public enum SignatureAlgorithm {
 
 	private final MaskGenerationFunction maskGenerationFunction;
 
-	// http://www.w3.org/TR/2013/NOTE-xmlsec-algorithms-20130411/
-	private static final Map<String, SignatureAlgorithm> XML_ALGORITHMS = registerXmlAlgorithms();
+	private final String providerName;
 
-	private static final Map<SignatureAlgorithm, String> XML_ALGORITHMS_FOR_KEY = registerXmlAlgorithmsForKey();
+	private static final List<SignatureAlgorithm> ALGORITHMS = Collections.synchronizedList(new ArrayList<>());
 
-	private static Map<String, SignatureAlgorithm> registerXmlAlgorithms() {
-
-		Map<String, SignatureAlgorithm> xmlAlgorithms = new HashMap<String, SignatureAlgorithm>();
-		xmlAlgorithms.put("http://www.w3.org/2000/09/xmldsig#rsa-sha1", RSA_SHA1);
-		xmlAlgorithms.put("http://www.w3.org/2001/04/xmldsig-more#rsa-sha224", RSA_SHA224);
-		xmlAlgorithms.put("http://www.w3.org/2001/04/xmldsig-more#rsa-sha256", RSA_SHA256);
-		xmlAlgorithms.put("http://www.w3.org/2001/04/xmldsig-more#rsa-sha384", RSA_SHA384);
-		xmlAlgorithms.put("http://www.w3.org/2001/04/xmldsig-more#rsa-sha512", RSA_SHA512);
-
-		// https://tools.ietf.org/html/rfc6931#section-2.3.10
-		xmlAlgorithms.put("http://www.w3.org/2007/05/xmldsig-more#sha1-rsa-MGF1", RSA_SSA_PSS_SHA1_MGF1);
-		xmlAlgorithms.put("http://www.w3.org/2007/05/xmldsig-more#sha224-rsa-MGF1", RSA_SSA_PSS_SHA224_MGF1);
-		xmlAlgorithms.put("http://www.w3.org/2007/05/xmldsig-more#sha256-rsa-MGF1", RSA_SSA_PSS_SHA256_MGF1);
-		xmlAlgorithms.put("http://www.w3.org/2007/05/xmldsig-more#sha384-rsa-MGF1", RSA_SSA_PSS_SHA384_MGF1);
-		xmlAlgorithms.put("http://www.w3.org/2007/05/xmldsig-more#sha512-rsa-MGF1", RSA_SSA_PSS_SHA512_MGF1);
-
-		xmlAlgorithms.put("http://www.w3.org/2007/05/xmldsig-more#sha3-224-rsa-MGF1", RSA_SSA_PSS_SHA3_224_MGF1);
-		xmlAlgorithms.put("http://www.w3.org/2007/05/xmldsig-more#sha3-256-rsa-MGF1", RSA_SSA_PSS_SHA3_256_MGF1);
-		xmlAlgorithms.put("http://www.w3.org/2007/05/xmldsig-more#sha3-384-rsa-MGF1", RSA_SSA_PSS_SHA3_384_MGF1);
-		xmlAlgorithms.put("http://www.w3.org/2007/05/xmldsig-more#sha3-512-rsa-MGF1", RSA_SSA_PSS_SHA3_512_MGF1);
-
-		xmlAlgorithms.put("http://www.w3.org/2001/04/xmldsig-more#rsa-ripemd160", RSA_RIPEMD160);
-		// Support of not standard AT algorithm name
-		// http://www.rfc-editor.org/rfc/rfc4051.txt --> http://www.rfc-editor.org/errata_search.php?rfc=4051
-		xmlAlgorithms.put("http://www.w3.org/2001/04/xmldsig-more/rsa-ripemd160", RSA_RIPEMD160);
-
-		// Following algorithms are not in ETSI TS 102 176-1 V2.0.0:
-		xmlAlgorithms.put("http://www.w3.org/2001/04/xmldsig-more#rsa-md5", RSA_MD5);
-		xmlAlgorithms.put("http://www.w3.org/2001/04/xmldsig-more#rsa-md2", RSA_MD2);
-		// Following end.
-		xmlAlgorithms.put("http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha1", ECDSA_SHA1);
-		xmlAlgorithms.put("http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha224", ECDSA_SHA224);
-		xmlAlgorithms.put("http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha256", ECDSA_SHA256);
-		xmlAlgorithms.put("http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha384", ECDSA_SHA384);
-		xmlAlgorithms.put("http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha512", ECDSA_SHA512);
-		xmlAlgorithms.put("http://www.w3.org/2007/05/xmldsig-more#ecdsa-ripemd160", ECDSA_RIPEMD160);
-
-		xmlAlgorithms.put("http://www.w3.org/2000/09/xmldsig#dsa-sha1", DSA_SHA1);
-		xmlAlgorithms.put("http://www.w3.org/2009/xmldsig11#dsa-sha256", DSA_SHA256);
-		// Following algorithms are not in ETSI TS 102 176-1 V2.0.0:
-		xmlAlgorithms.put("http://www.w3.org/2000/09/xmldsig#hmac-sha1", HMAC_SHA1);
-		xmlAlgorithms.put("http://www.w3.org/2001/04/xmldsig-more#hmac-sha224", HMAC_SHA224);
-		xmlAlgorithms.put("http://www.w3.org/2001/04/xmldsig-more#hmac-sha256", HMAC_SHA256);
-		xmlAlgorithms.put("http://www.w3.org/2001/04/xmldsig-more#hmac-sha384", HMAC_SHA384);
-		xmlAlgorithms.put("http://www.w3.org/2001/04/xmldsig-more#hmac-sha512", HMAC_SHA512);
-		xmlAlgorithms.put("http://www.w3.org/2001/04/xmldsig-more#hmac-ripemd160", HMAC_RIPEMD160);
-		// Following end.
-		return xmlAlgorithms;
+	public static SignatureAlgorithm withXML(String xml, SignatureAlgorithm algorithm) {
+		XML_ALGORITHMS.put(xml, algorithm);
+		XML_ALGORITHMS_FOR_KEY.put(algorithm, xml);
+		return algorithm;
 	}
 
-	private static Map<SignatureAlgorithm, String> registerXmlAlgorithmsForKey() {
-
-		Map<SignatureAlgorithm, String> xmlAlgorithms = new HashMap<SignatureAlgorithm, String>();
-		for (Entry<String, SignatureAlgorithm> entry : XML_ALGORITHMS.entrySet()) {
-
-			xmlAlgorithms.put(entry.getValue(), entry.getKey());
-		}
-		return xmlAlgorithms;
+	public static SignatureAlgorithm withOID(String oid, SignatureAlgorithm algorithm) {
+		OID_ALGORITHMS.put(oid, algorithm);
+		return algorithm;
 	}
 
-	private static final Map<String, SignatureAlgorithm> OID_ALGORITHMS = registerOIDAlgorithms();
-
-	private static Map<String, SignatureAlgorithm> registerOIDAlgorithms() {
-
-		Map<String, SignatureAlgorithm> oidAlgorithms = new HashMap<String, SignatureAlgorithm>();
-
-		oidAlgorithms.put("1.2.840.113549.1.1.5", RSA_SHA1);
-		oidAlgorithms.put("1.3.14.3.2.29", RSA_SHA1);
-		oidAlgorithms.put("1.2.840.113549.1.1.14", RSA_SHA224);
-		oidAlgorithms.put("1.2.840.113549.1.1.11", RSA_SHA256);
-		oidAlgorithms.put("1.2.840.113549.1.1.12", RSA_SHA384);
-		oidAlgorithms.put("1.2.840.113549.1.1.13", RSA_SHA512);
-		oidAlgorithms.put("1.3.36.3.3.1.2", RSA_RIPEMD160);
-
-		oidAlgorithms.put("2.16.840.1.101.3.4.3.13", RSA_SHA3_224);
-		oidAlgorithms.put("2.16.840.1.101.3.4.3.14", RSA_SHA3_256);
-		oidAlgorithms.put("2.16.840.1.101.3.4.3.15", RSA_SHA3_384);
-		oidAlgorithms.put("2.16.840.1.101.3.4.3.16", RSA_SHA3_512);
-
-		oidAlgorithms.put("1.2.840.113549.1.1.4", RSA_MD5);
-		oidAlgorithms.put("1.2.840.113549.1.1.2", RSA_MD2);
-		/**
-		 * RFC 2313:<br>
-		 * "md2WithRSAEncryption", 1.2.840.113549.1.1.2<br>
-		 * "md4WithRSAEncryption", 1.2.840.113549.1.1.3<br>
-		 * "md5WithRSAEncryption", 1.2.840.113549.1.1.4<br>
-		 */
-
-		oidAlgorithms.put("1.2.840.10045.4.1", ECDSA_SHA1);
-		oidAlgorithms.put("1.2.840.10045.4.3.1", ECDSA_SHA224);
-		oidAlgorithms.put("1.2.840.10045.4.3.2", ECDSA_SHA256);
-		oidAlgorithms.put("1.2.840.10045.4.3.3", ECDSA_SHA384);
-		oidAlgorithms.put("1.2.840.10045.4.3.4", ECDSA_SHA512);
-		oidAlgorithms.put("0.4.0.127.0.7.1.1.4.1.6", ECDSA_RIPEMD160);
-
-		/*
-		 * id-ecdsa-with-sha3-256 {joint-iso-itu-t(2) country(16) us(840) organization(1) gov(101) csor(3)
-		 * nistAlgorithm(4) sigAlgs(3) 10}
-		 * NIST CSOR [18]
-		 * id-ecdsa-with-sha3-384 {joint-iso-itu-t(2) country(16) us(840) organization(1) gov(101) csor(3)
-		 * nistAlgorithm(4) sigAlgs(3) 11}
-		 * NIST CSOR [18]
-		 * id-ecdsa-with-sha3-512 {joint-iso-itu-t(2) country(16) us(840) organization(1) gov(101) csor(3)
-		 * nistAlgorithm(4) sigAlgs(3) 12}
-		 */
-		oidAlgorithms.put("2.16.840.1.101.3.4.3.9", ECDSA_SHA3_224);
-		oidAlgorithms.put("2.16.840.1.101.3.4.3.10", ECDSA_SHA3_256);
-		oidAlgorithms.put("2.16.840.1.101.3.4.3.11", ECDSA_SHA3_384);
-		oidAlgorithms.put("2.16.840.1.101.3.4.3.12", ECDSA_SHA3_512);
-
-		oidAlgorithms.put("1.2.840.10040.4.3", DSA_SHA1);
-		oidAlgorithms.put("1.2.14888.3.0.1", DSA_SHA1);
-		oidAlgorithms.put("2.16.840.1.101.3.4.3.1", DSA_SHA224);
-		oidAlgorithms.put("2.16.840.1.101.3.4.3.2", DSA_SHA256);
-		oidAlgorithms.put("2.16.840.1.101.3.4.3.3", DSA_SHA384);
-		oidAlgorithms.put("2.16.840.1.101.3.4.3.4", DSA_SHA512);
-
-		oidAlgorithms.put("2.16.840.1.101.3.4.3.5", DSA_SHA3_224);
-		oidAlgorithms.put("2.16.840.1.101.3.4.3.6", DSA_SHA3_256);
-		oidAlgorithms.put("2.16.840.1.101.3.4.3.7", DSA_SHA3_384);
-		oidAlgorithms.put("2.16.840.1.101.3.4.3.8", DSA_SHA3_512);
-
-		oidAlgorithms.put("1.2.840.113549.2.7", HMAC_SHA1);
-		oidAlgorithms.put("1.2.840.113549.2.8", HMAC_SHA224);
-		oidAlgorithms.put("1.2.840.113549.2.9", HMAC_SHA256);
-		oidAlgorithms.put("1.2.840.113549.2.10", HMAC_SHA384);
-		oidAlgorithms.put("1.2.840.113549.2.11", HMAC_SHA512);
-		oidAlgorithms.put("1.3.6.1.5.5.8.1.4", HMAC_RIPEMD160);
-
-		oidAlgorithms.put("2.16.840.1.101.3.4.2.13", HMAC_SHA3_224);
-		oidAlgorithms.put("2.16.840.1.101.3.4.2.14", HMAC_SHA3_256);
-		oidAlgorithms.put("2.16.840.1.101.3.4.2.15", HMAC_SHA3_384);
-		oidAlgorithms.put("2.16.840.1.101.3.4.2.16", HMAC_SHA3_512);
-
-		oidAlgorithms.put("1.2.840.113549.1.1.10", RSA_SSA_PSS_SHA1_MGF1);
-
-		return oidAlgorithms;
-	}
-
-	private static final Map<String, SignatureAlgorithm> JAVA_ALGORITHMS = registerJavaAlgorithms();
-
-	private static final Map<SignatureAlgorithm, String> JAVA_ALGORITHMS_FOR_KEY = registerJavaAlgorithmsForKey();
-
-	private static Map<String, SignatureAlgorithm> registerJavaAlgorithms() {
-
-		Map<String, SignatureAlgorithm> javaAlgorithms = new HashMap<String, SignatureAlgorithm>();
-
-		javaAlgorithms.put("SHA1withRSA", RSA_SHA1);
-		javaAlgorithms.put("SHA224withRSA", RSA_SHA224);
-		javaAlgorithms.put("SHA256withRSA", RSA_SHA256);
-		javaAlgorithms.put("SHA384withRSA", RSA_SHA384);
-		javaAlgorithms.put("SHA512withRSA", RSA_SHA512);
-
-		javaAlgorithms.put("SHA3-224withRSA", RSA_SHA3_224);
-		javaAlgorithms.put("SHA3-256withRSA", RSA_SHA3_256);
-		javaAlgorithms.put("SHA3-384withRSA", RSA_SHA3_384);
-		javaAlgorithms.put("SHA3-512withRSA", RSA_SHA3_512);
-
-		javaAlgorithms.put("SHA1withRSAandMGF1", RSA_SSA_PSS_SHA1_MGF1);
-		javaAlgorithms.put("SHA224withRSAandMGF1", RSA_SSA_PSS_SHA224_MGF1);
-		javaAlgorithms.put("SHA256withRSAandMGF1", RSA_SSA_PSS_SHA256_MGF1);
-		javaAlgorithms.put("SHA384withRSAandMGF1", RSA_SSA_PSS_SHA384_MGF1);
-		javaAlgorithms.put("SHA512withRSAandMGF1", RSA_SSA_PSS_SHA512_MGF1);
-
-		javaAlgorithms.put("SHA3-224withRSAandMGF1", RSA_SSA_PSS_SHA3_224_MGF1);
-		javaAlgorithms.put("SHA3-256withRSAandMGF1", RSA_SSA_PSS_SHA3_256_MGF1);
-		javaAlgorithms.put("SHA3-384withRSAandMGF1", RSA_SSA_PSS_SHA3_384_MGF1);
-		javaAlgorithms.put("SHA3-512withRSAandMGF1", RSA_SSA_PSS_SHA3_512_MGF1);
-
-		javaAlgorithms.put("RIPEMD160withRSA", RSA_RIPEMD160);
-
-		javaAlgorithms.put("MD5withRSA", RSA_MD5);
-		javaAlgorithms.put("MD2withRSA", RSA_MD2);
-
-		javaAlgorithms.put("SHA1withECDSA", ECDSA_SHA1);
-		javaAlgorithms.put("SHA224withECDSA", ECDSA_SHA224);
-		javaAlgorithms.put("SHA256withECDSA", ECDSA_SHA256);
-		javaAlgorithms.put("SHA384withECDSA", ECDSA_SHA384);
-		javaAlgorithms.put("SHA512withECDSA", ECDSA_SHA512);
-		javaAlgorithms.put("RIPEMD160withECDSA", ECDSA_RIPEMD160);
-
-		javaAlgorithms.put("SHA3-224withECDSA", ECDSA_SHA3_224);
-		javaAlgorithms.put("SHA3-256withECDSA", ECDSA_SHA3_256);
-		javaAlgorithms.put("SHA3-384withECDSA", ECDSA_SHA3_384);
-		javaAlgorithms.put("SHA3-512withECDSA", ECDSA_SHA3_512);
-
-		javaAlgorithms.put("SHA1withDSA", DSA_SHA1);
-		javaAlgorithms.put("SHA224withDSA", DSA_SHA224);
-		javaAlgorithms.put("SHA256withDSA", DSA_SHA256);
-		javaAlgorithms.put("SHA384withDSA", DSA_SHA384);
-		javaAlgorithms.put("SHA512withDSA", DSA_SHA512);
-
-		javaAlgorithms.put("SHA3-224withDSA", DSA_SHA3_224);
-		javaAlgorithms.put("SHA3-256withDSA", DSA_SHA3_256);
-		javaAlgorithms.put("SHA3-384withDSA", DSA_SHA3_384);
-		javaAlgorithms.put("SHA3-512withDSA", DSA_SHA3_512);
-
-		javaAlgorithms.put("SHA1withHMAC", HMAC_SHA1);
-		javaAlgorithms.put("SHA224withHMAC", HMAC_SHA224);
-		javaAlgorithms.put("SHA256withHMAC", HMAC_SHA256);
-		javaAlgorithms.put("SHA384withHMAC", HMAC_SHA384);
-		javaAlgorithms.put("SHA512withHMAC", HMAC_SHA512);
-
-		javaAlgorithms.put("SHA3-224withHMAC", HMAC_SHA3_224);
-		javaAlgorithms.put("SHA3-256withHMAC", HMAC_SHA3_256);
-		javaAlgorithms.put("SHA3-384withHMAC", HMAC_SHA3_384);
-		javaAlgorithms.put("SHA3-512withHMAC", HMAC_SHA3_512);
-
-		javaAlgorithms.put("RIPEMD160withHMAC", HMAC_RIPEMD160);
-		return javaAlgorithms;
-	}
-
-	private static Map<SignatureAlgorithm, String> registerJavaAlgorithmsForKey() {
-		final Map<SignatureAlgorithm, String> javaAlgorithms = new HashMap<SignatureAlgorithm, String>();
-		for (Entry<String, SignatureAlgorithm> entry : JAVA_ALGORITHMS.entrySet()) {
-			javaAlgorithms.put(entry.getValue(), entry.getKey());
-		}
-		return javaAlgorithms;
+	public static SignatureAlgorithm withJAVA(String javaAlgorithm, SignatureAlgorithm algorithm) {
+		JAVA_ALGORITHMS.put(javaAlgorithm, algorithm);
+		JAVA_ALGORITHMS_FOR_KEY.put(algorithm, javaAlgorithm);
+		return algorithm;
 	}
 
 	public static SignatureAlgorithm forXML(final String xmlName) {
@@ -388,6 +431,14 @@ public enum SignatureAlgorithm {
 
 	public static SignatureAlgorithm forOID(final String oid) {
 		final SignatureAlgorithm algorithm = OID_ALGORITHMS.get(oid);
+		if (algorithm == null) {
+			throw new DSSException("Unsupported algorithm: " + oid);
+		}
+		return algorithm;
+	}
+
+	public static SignatureAlgorithm forName(final String oid) {
+		final SignatureAlgorithm algorithm = NAME_ALGORITHMS.get(oid);
 		if (algorithm == null) {
 			throw new DSSException("Unsupported algorithm: " + oid);
 		}
@@ -455,7 +506,8 @@ public enum SignatureAlgorithm {
 	 *            the digest algorithm
 	 * @return the corresponding combination of both algorithms
 	 */
-	public static SignatureAlgorithm getAlgorithm(final EncryptionAlgorithm encryptionAlgorithm, final DigestAlgorithm digestAlgorithm) {
+	public static SignatureAlgorithm getAlgorithm(final EncryptionAlgorithm encryptionAlgorithm,
+												  final DigestAlgorithm digestAlgorithm) {
 		return getAlgorithm(encryptionAlgorithm, digestAlgorithm, null);
 	}
 
@@ -470,8 +522,9 @@ public enum SignatureAlgorithm {
 	 *            the mask generation function
 	 * @return the corresponding combination of both algorithms
 	 */
-	public static SignatureAlgorithm getAlgorithm(final EncryptionAlgorithm encryptionAlgorithm, final DigestAlgorithm digestAlgorithm,
-			final MaskGenerationFunction mgf) {
+	public static SignatureAlgorithm getAlgorithm(final EncryptionAlgorithm encryptionAlgorithm,
+												  final DigestAlgorithm digestAlgorithm,
+												  final MaskGenerationFunction mgf) {
 
 		StringBuilder sb = new StringBuilder();
 		sb.append(digestAlgorithm.getName());
@@ -480,38 +533,85 @@ public enum SignatureAlgorithm {
 		if (mgf != null) {
 			sb.append("andMGF1");
 		}
-		return JAVA_ALGORITHMS.get(sb.toString());
+		return forJAVA(sb.toString());
+	}
+
+	public static SignatureAlgorithm[] values() {
+		return ALGORITHMS.toArray(new SignatureAlgorithm[0]);
+	}
+
+	public static SignatureAlgorithm register(final String name,
+											  final EncryptionAlgorithm encryptionAlgorithm,
+											  final DigestAlgorithm digestAlgorithm,
+											  final String providerName) {
+		return new SignatureAlgorithm(name, encryptionAlgorithm, digestAlgorithm, null, providerName);
+	}
+
+	public static SignatureAlgorithm register(final String name,
+											  final EncryptionAlgorithm encryptionAlgorithm,
+											  final DigestAlgorithm digestAlgorithm,
+											  final MaskGenerationFunction maskGenerationFunction,
+											  final String providerName) {
+		return new SignatureAlgorithm(name, encryptionAlgorithm, digestAlgorithm, maskGenerationFunction, providerName);
 	}
 
 	/**
 	 * The default constructor.
 	 *
+	 * @param name
+	 *            name of algorithm
 	 * @param encryptionAlgorithm
 	 *            the encryption algorithm
 	 * @param digestAlgorithm
 	 *            the digest algorithm
+	 * @param providerName
+	 *            the name of security provider
 	 */
-	private SignatureAlgorithm(final EncryptionAlgorithm encryptionAlgorithm, final DigestAlgorithm digestAlgorithm) {
-		this.encryptionAlgo = encryptionAlgorithm;
-		this.digestAlgo = digestAlgorithm;
-		this.maskGenerationFunction = null;
+	private SignatureAlgorithm(final String name,
+							   final EncryptionAlgorithm encryptionAlgorithm,
+							   final DigestAlgorithm digestAlgorithm,
+							   final String providerName) {
+		this(name, encryptionAlgorithm, digestAlgorithm, null, providerName);
 	}
 
 	/**
 	 * The default constructor.
 	 *
+	 * @param name
+	 *            name of algorithm
 	 * @param encryptionAlgorithm
 	 *            the encryption algorithm
 	 * @param digestAlgorithm
 	 *            the digest algorithm
-	 * @param mgf
+	 * @param maskGenerationFunction
 	 *            the mask generation function
+	 * @param providerName
+	 *            the name of security provider
 	 */
-	private SignatureAlgorithm(final EncryptionAlgorithm encryptionAlgorithm, final DigestAlgorithm digestAlgorithm,
-			final MaskGenerationFunction maskGenerationFunction) {
+	private SignatureAlgorithm(final String name,
+							   final EncryptionAlgorithm encryptionAlgorithm,
+							   final DigestAlgorithm digestAlgorithm,
+							   final MaskGenerationFunction maskGenerationFunction,
+							   final String providerName) {
+		this.name = name;
 		this.encryptionAlgo = encryptionAlgorithm;
 		this.digestAlgo = digestAlgorithm;
 		this.maskGenerationFunction = maskGenerationFunction;
+		this.providerName = providerName;
+		NAME_ALGORITHMS.put(name, this);
+	}
+
+
+	public Signature getAlgorithmInstance() throws NoSuchAlgorithmException {
+		try {
+			return Signature.getInstance(getJCEId(), getProviderName());
+		} catch (NoSuchProviderException e) {
+			return Signature.getInstance(getName());
+		}
+	}
+
+	public String getName() {
+		return name;
 	}
 
 	/**
@@ -559,4 +659,38 @@ public enum SignatureAlgorithm {
 		return JAVA_ALGORITHMS_FOR_KEY.get(this);
 	}
 
+	/**
+	 * Returns security provider name that provides algorithm implementation
+	 * @return provider name
+	 */
+	public String getProviderName() {
+		return providerName;
+	}
+
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		SignatureAlgorithm that = (SignatureAlgorithm) o;
+		return Objects.equals(name, that.name) &&
+			Objects.equals(encryptionAlgo, that.encryptionAlgo) &&
+			Objects.equals(digestAlgo, that.digestAlgo) &&
+			maskGenerationFunction == that.maskGenerationFunction &&
+			Objects.equals(providerName, that.providerName);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(name, encryptionAlgo, digestAlgo, maskGenerationFunction, providerName);
+	}
+
+	@Override
+	public String toString() {
+		return name;
+	}
 }

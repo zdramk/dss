@@ -32,7 +32,7 @@ public class DigestAlgorithmTest {
 	@Test
 	public void testGetJavaName() throws NoSuchAlgorithmException {
 		// DONT change digestAlgo.getJavaName() !
-		MessageDigest md = MessageDigest.getInstance(digestAlgo.getJavaName());
+		MessageDigest md = digestAlgo.getAlgorithmInstance();
 		assertNotNull(md.digest(new byte[] { 1, 2, 3 }));
 	}
 

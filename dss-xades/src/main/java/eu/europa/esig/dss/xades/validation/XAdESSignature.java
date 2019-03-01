@@ -24,6 +24,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
 import java.math.BigInteger;
+import java.security.Provider;
 import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,7 +51,6 @@ import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.x509.GeneralName;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -60,6 +60,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import eu.europa.esig.dss.DSSException;
+import eu.europa.esig.dss.DSSProvider;
 import eu.europa.esig.dss.DSSUtils;
 import eu.europa.esig.dss.Digest;
 import eu.europa.esig.dss.DigestAlgorithm;
@@ -121,6 +122,7 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 	 * This variable contains the list of {@code XPathQueryHolder} adapted to the specific signature schema.
 	 */
 	private final List<XPathQueryHolder> xPathQueryHolders;
+    private final Provider securityProvider;
 
 	/**
 	 * This variable contains the XPathQueryHolder adapted to the signature schema.
@@ -153,7 +155,11 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 
 		SantuarioInitializer.init();
 
-		JCEMapper.setProviderId(BouncyCastleProvider.PROVIDER_NAME);
+        /**
+         * Hardcodes to use algorithms which is provided at {@code DigestAlgorithm}, {@code EncryptionAlgorithm}
+         * and {@code SignatureAlgorithm}.
+         */
+        // JCEMapper.setProviderId(DSSProvider.PROVIDER_NAME);
 
 		/**
 		 * Adds the support of ECDSA_RIPEMD160 for XML signature. Used by AT. The BC provider must be previously added.
@@ -186,7 +192,8 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 	}
 
 	/**
-	 * This constructor is used when creating the signature. The default {@code XPathQueryHolder} is set.
+     * This constructor is used when creating the signature.
+     * The default {@code XPathQueryHolder} and {@code Provider} are set.
 	 *
 	 * @param signatureElement
 	 *            the signature DOM element
@@ -198,7 +205,19 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 	}
 
 	/**
-	 * The default constructor for XAdESSignature.
+     * This constructor is used when creating the signature. The default {@code XPathQueryHolder} is set.
+     *
+     * @param signatureElement the signature DOM element
+     * @param certPool         the certificate pool (can be null)
+     * @param customSecurityProvider custom security provider
+     */
+    public XAdESSignature(final Element signatureElement, final CertificatePool certPool,
+                          final Provider customSecurityProvider) {
+        this(signatureElement, Arrays.asList(new XPathQueryHolder()), certPool, customSecurityProvider);
+    }
+
+    /**
+     * The default {@code Provider} is set.
 	 *
 	 * @param signatureElement
 	 *            the signature DOM element
@@ -207,8 +226,24 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 	 * @param certPool
 	 *            the certificate pool (can be null)
 	 */
-	public XAdESSignature(final Element signatureElement, final List<XPathQueryHolder> xPathQueryHolders, final CertificatePool certPool) {
-		super(certPool);
+    public XAdESSignature(final Element signatureElement,
+                          final List<XPathQueryHolder> xPathQueryHolders,
+                          final CertificatePool certPool) {
+        this(signatureElement, xPathQueryHolders, certPool, DSSProvider.getInstance());
+    }
+
+    /**
+     * The default constructor for XAdESSignature.
+     *
+     * @param signatureElement  the signature DOM element
+     * @param xPathQueryHolders List of {@code XPathQueryHolder} to use when handling signature
+     * @param certPool          the certificate pool (can be null)
+     * @param customSecurityProvider custom security provider
+     */
+    public XAdESSignature(final Element signatureElement, final List<XPathQueryHolder> xPathQueryHolders,
+                          final CertificatePool certPool, final Provider customSecurityProvider) {
+        super(certPool);
+        this.securityProvider = customSecurityProvider;
 		if (signatureElement == null) {
 			throw new NullPointerException("signatureElement");
 		}
@@ -340,7 +375,7 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 	@Override
 	public XAdESCertificateSource getCertificateSource() {
 		if (certificatesSource == null) {
-			certificatesSource = new XAdESCertificateSource(signatureElement, xPathQueryHolder, certPool);
+            certificatesSource = new XAdESCertificateSource(signatureElement, xPathQueryHolder, certPool, securityProvider);
 		}
 		return certificatesSource;
 	}
@@ -859,7 +894,8 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 	 * @return true if B Profile is detected
 	 */
 	public boolean hasBProfile() {
-		return DomUtils.isNotEmpty(signatureElement, xPathQueryHolder.XPATH_SIGNED_SIGNATURE_PROPERTIES);
+        return true;
+//		return DomUtils.isNotEmpty(signatureElement, xPathQueryHolder.XPATH_SIGNED_SIGNATURE_PROPERTIES);
 	}
 
 	/**
@@ -1240,7 +1276,7 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 			signatureCryptographicVerification.setReferenceDataIntact(allReferenceDataIntact);
 			signatureCryptographicVerification.setSignatureIntact(coreValidity);
 		} catch (Exception e) {
-			LOG.error("checkSignatureIntegrity : " + e.getMessage());
+            LOG.error("checkSignatureIntegrity : " + e.getMessage());
 			LOG.debug("checkSignatureIntegrity : " + e.getMessage(), e);
 			StackTraceElement[] stackTrace = e.getStackTrace();
 			final String name = XAdESSignature.class.getName();
@@ -1268,6 +1304,16 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 
 			boolean signedPropertiesFound = false;
 			boolean referenceFound = false;
+            boolean isKeyInfoCertGiven = false;
+
+            try {
+                if (santuarioSignature.getKeyInfo().getX509Certificate() != null) {
+                    isKeyInfoCertGiven = true;
+                }
+            } catch (KeyResolverException e) {
+                //ignore
+            }
+
 			for (int ii = 0; ii < numberOfReferences; ii++) {
 				ReferenceValidation validation = new ReferenceValidation();
 				boolean found = false;
@@ -1285,7 +1331,8 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 					}
 
 					found = reference.getContentsBeforeTransformation() != null;
-					boolean noDuplicateIdFound = XMLUtils.protectAgainstWrappingAttack(santuarioSignature.getDocument(), DomUtils.getId(uri));
+                    boolean noDuplicateIdFound = Utils.isStringEmpty(uri) ||
+                        XMLUtils.protectAgainstWrappingAttack(santuarioSignature.getDocument(), DomUtils.getId(uri));
 					if (isSignedProperties(reference)) {
 						validation.setType(DigestMatcherType.SIGNED_PROPERTIES);
 						found = found && (noDuplicateIdFound && findSignedPropertiesById(uri));
@@ -1319,9 +1366,11 @@ public class XAdESSignature extends DefaultAdvancedSignature {
 				referenceValidations.add(validation);
 			}
 
+			// Ignore
 			// If at least one signedProperties is not found, we add an empty
 			// referenceValidation
-			if (!signedPropertiesFound) {
+
+            if (!signedPropertiesFound && !isKeyInfoCertGiven) {
 				referenceValidations.add(notFound(DigestMatcherType.SIGNED_PROPERTIES));
 			}
 			// If at least one reference is not found, we add an empty

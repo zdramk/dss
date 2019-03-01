@@ -6,6 +6,7 @@ import static org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers.id_aa_signingCert
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Objects;
 
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.ASN1InputStream;
@@ -253,7 +254,7 @@ public final class CMSUtils {
 		}
 
 		Attribute attribute = null;
-		if (digestAlgorithm == DigestAlgorithm.SHA1) {
+		if (Objects.equals(digestAlgorithm, DigestAlgorithm.SHA1)) {
 			final ESSCertID essCertID = new ESSCertID(certHash, issuerSerial);
 			SigningCertificate signingCertificate = new SigningCertificate(essCertID);
 			attribute = new Attribute(id_aa_signingCertificate, new DERSet(signingCertificate));

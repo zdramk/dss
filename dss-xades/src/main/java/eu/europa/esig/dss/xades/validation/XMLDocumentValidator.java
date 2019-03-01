@@ -20,6 +20,7 @@
  */
 package eu.europa.esig.dss.xades.validation;
 
+import java.security.Provider;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -35,6 +36,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import eu.europa.esig.dss.DSSProvider;
 import eu.europa.esig.dss.DSSDocument;
 import eu.europa.esig.dss.DSSException;
 import eu.europa.esig.dss.DSSUtils;
@@ -67,6 +69,7 @@ public class XMLDocumentValidator extends SignedDocumentValidator {
 	protected Document rootElement;
 
 	private List<AdvancedSignature> signatures;
+	private Provider securityProvider;
 
 	/**
 	 * Default constructor used with reflexion (see SignedDocumentValidator)
@@ -85,8 +88,24 @@ public class XMLDocumentValidator extends SignedDocumentValidator {
 	 * @throws DSSException
 	 */
 	public XMLDocumentValidator(final DSSDocument dssDocument) throws DSSException {
+		this(dssDocument, DSSProvider.getInstance());
+	}
+
+	/**
+	 * The default constructor for XMLDocumentValidator. The created instance is initialised with default
+	 * {@code XPathQueryHolder} and
+	 * {@code XAdES111XPathQueryHolder}.
+	 *
+	 * @param dssDocument
+	 *            The instance of {@code DSSDocument} to validate
+	 * @param securityProvider
+	 *            A security algorithms provider
+	 * @throws DSSException
+	 */
+	public XMLDocumentValidator(final DSSDocument dssDocument, final Provider securityProvider) throws DSSException {
 
 		super(new XAdESSignatureScopeFinder());
+		this.securityProvider = securityProvider;
 		this.document = dssDocument;
 		this.rootElement = DomUtils.buildDOM(dssDocument);
 
@@ -129,7 +148,8 @@ public class XMLDocumentValidator extends SignedDocumentValidator {
 		for (int ii = 0; ii < signatureNodeList.getLength(); ii++) {
 
 			final Element signatureEl = (Element) signatureNodeList.item(ii);
-			final XAdESSignature xadesSignature = new XAdESSignature(signatureEl, xPathQueryHolders, validationCertPool);
+			final XAdESSignature xadesSignature =
+				new XAdESSignature(signatureEl, xPathQueryHolders, validationCertPool, securityProvider);
 			xadesSignature.setSignatureFilename(document.getName());
 			xadesSignature.setDetachedContents(detachedContents);
 			xadesSignature.setProvidedSigningCertificateToken(providedSigningCertificateToken);

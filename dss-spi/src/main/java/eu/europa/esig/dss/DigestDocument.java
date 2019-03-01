@@ -50,15 +50,6 @@ public class DigestDocument extends CommonDocument {
 	}
 
 	@Override
-	public String getDigest(final DigestAlgorithm digestAlgorithm) {
-		String base64EncodeDigest = base64EncodeDigestMap.get(digestAlgorithm);
-		if (base64EncodeDigest == null) {
-			throw new DSSException("Unknown digest value for algorithm : " + digestAlgorithm);
-		}
-		return base64EncodeDigest;
-	}
-
-	@Override
 	public InputStream openStream() throws DSSException {
 		throw new DSSException("Digest document");
 	}

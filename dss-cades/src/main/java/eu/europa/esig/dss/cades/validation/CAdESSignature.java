@@ -47,6 +47,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1EncodableVector;
@@ -424,7 +425,7 @@ public class CAdESSignature extends DefaultAdvancedSignature {
 				final String algorithmId = essCertIDv2.getHashAlgorithm().getAlgorithm().getId();
 				final DigestAlgorithm digestAlgorithm = DigestAlgorithm.forOID(algorithmId);
 				signingCertificateValidity.setDigestAlgorithm(digestAlgorithm);
-				if (digestAlgorithm != lastDigestAlgorithm) {
+				if (!Objects.equals(digestAlgorithm, lastDigestAlgorithm)) {
 					signingTokenCertHash = signingCertificateValidity.getCertificateToken().getDigest(digestAlgorithm);
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("Candidate Certificate Hash {} with algorithm {}", Utils.toHex(signingTokenCertHash), digestAlgorithm.getName());

@@ -20,42 +20,52 @@
  */
 package eu.europa.esig.dss;
 
-import java.util.HashMap;
+import java.io.Serializable;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Supported Algorithms
  *
  */
-public enum DigestAlgorithm {
+public class DigestAlgorithm implements Serializable {
+
+	private static final Map<String, DigestAlgorithm> OID_ALGORITHMS = new ConcurrentHashMap<>();
+	private static final Map<String, DigestAlgorithm> XML_ALGORITHMS = new ConcurrentHashMap<>();
+	private static final Map<String, DigestAlgorithm> ALGORITHMS = new ConcurrentHashMap<>();
 
 	// see DEPRECATED http://www.w3.org/TR/2012/WD-xmlsec-algorithms-20120105/
 	// see http://www.w3.org/TR/2013/NOTE-xmlsec-algorithms-20130411/
 	// @formatter:off
-	SHA1("SHA1", "SHA-1", "1.3.14.3.2.26", "http://www.w3.org/2000/09/xmldsig#sha1", 20),
+	public static final DigestAlgorithm SHA1 = new DigestAlgorithm ("SHA1", "SHA-1", "1.3.14.3.2.26", "http://www.w3.org/2000/09/xmldsig#sha1", 20, DSSProvider.PROVIDER_NAME),
 
-	SHA224("SHA224", "SHA-224", "2.16.840.1.101.3.4.2.4", "http://www.w3.org/2001/04/xmldsig-more#sha224", 28),
+	SHA224 = new DigestAlgorithm ("SHA224", "SHA-224", "2.16.840.1.101.3.4.2.4", "http://www.w3.org/2001/04/xmldsig-more#sha224", 28, DSSProvider.PROVIDER_NAME),
 
-	SHA256("SHA256", "SHA-256", "2.16.840.1.101.3.4.2.1", "http://www.w3.org/2001/04/xmlenc#sha256", 32),
+	SHA256 = new DigestAlgorithm ("SHA256", "SHA-256", "2.16.840.1.101.3.4.2.1", "http://www.w3.org/2001/04/xmlenc#sha256", 32, DSSProvider.PROVIDER_NAME),
+	
+	SHA384 = new DigestAlgorithm ("SHA384", "SHA-384", "2.16.840.1.101.3.4.2.2", "http://www.w3.org/2001/04/xmldsig-more#sha384", 48, DSSProvider.PROVIDER_NAME),
 
-	SHA384("SHA384", "SHA-384", "2.16.840.1.101.3.4.2.2", "http://www.w3.org/2001/04/xmldsig-more#sha384", 48),
-
-	SHA512("SHA512", "SHA-512", "2.16.840.1.101.3.4.2.3", "http://www.w3.org/2001/04/xmlenc#sha512", 64),
+	SHA512 = new DigestAlgorithm ("SHA512", "SHA-512", "2.16.840.1.101.3.4.2.3", "http://www.w3.org/2001/04/xmlenc#sha512", 64, DSSProvider.PROVIDER_NAME),
 
 	// see https://tools.ietf.org/html/rfc6931
-	SHA3_224("SHA3-224", "SHA3-224", "2.16.840.1.101.3.4.2.7", "http://www.w3.org/2007/05/xmldsig-more#sha3-224", 28),
+	SHA3_224 = new DigestAlgorithm ("SHA3-224", "SHA3-224", "2.16.840.1.101.3.4.2.7", "http://www.w3.org/2007/05/xmldsig-more#sha3-224", 28, DSSProvider.PROVIDER_NAME),
 
-	SHA3_256("SHA3-256", "SHA3-256", "2.16.840.1.101.3.4.2.8", "http://www.w3.org/2007/05/xmldsig-more#sha3-256", 32),
+	SHA3_256 = new DigestAlgorithm ("SHA3-256", "SHA3-256", "2.16.840.1.101.3.4.2.8", "http://www.w3.org/2007/05/xmldsig-more#sha3-256", 32, DSSProvider.PROVIDER_NAME),
 
-	SHA3_384("SHA3-384", "SHA3-384", "2.16.840.1.101.3.4.2.9", "http://www.w3.org/2007/05/xmldsig-more#sha3-384", 48),
+	SHA3_384 = new DigestAlgorithm ("SHA3-384", "SHA3-384", "2.16.840.1.101.3.4.2.9", "http://www.w3.org/2007/05/xmldsig-more#sha3-384", 48, DSSProvider.PROVIDER_NAME),
 
-	SHA3_512("SHA3-512", "SHA3-512", "2.16.840.1.101.3.4.2.10", "http://www.w3.org/2007/05/xmldsig-more#sha3-512", 64),
+	SHA3_512 = new DigestAlgorithm ("SHA3-512", "SHA3-512", "2.16.840.1.101.3.4.2.10", "http://www.w3.org/2007/05/xmldsig-more#sha3-512", 64, DSSProvider.PROVIDER_NAME),
 
-	RIPEMD160("RIPEMD160", "RIPEMD160", "1.3.36.3.2.1", "http://www.w3.org/2001/04/xmlenc#ripemd160"),
+	RIPEMD160 = new DigestAlgorithm ("RIPEMD160", "RIPEMD160", "1.3.36.3.2.1", "http://www.w3.org/2001/04/xmlenc#ripemd160", DSSProvider.PROVIDER_NAME),
 
-	MD2("MD2", "MD2", "1.2.840.113549.2.2", "http://www.w3.org/2001/04/xmldsig-more#md2"),
+	MD2 = new DigestAlgorithm ("MD2", "MD2", "1.2.840.113549.2.2", "http://www.w3.org/2001/04/xmldsig-more#md2", DSSProvider.PROVIDER_NAME),
 
-	MD5("MD5", "MD5", "1.2.840.113549.2.5", "http://www.w3.org/2001/04/xmldsig-more#md5");
+	MD5 = new DigestAlgorithm ("MD5", "MD5", "1.2.840.113549.2.5", "http://www.w3.org/2001/04/xmldsig-more#md5", DSSProvider.PROVIDER_NAME);
+
 	/**
 	 * RFC 2313
 	 * "MD2", "1.2.840.113549.2.2"
@@ -70,37 +80,7 @@ public enum DigestAlgorithm {
 	private final String xmlId;
 	/* In case of MGF usage */
 	private final int saltLength;
-
-	private static class Registry {
-
-		private static final Map<String, DigestAlgorithm> OID_ALGORITHMS = registerOIDAlgorithms();
-		private static final Map<String, DigestAlgorithm> XML_ALGORITHMS = registerXMLAlgorithms();
-		private static final Map<String, DigestAlgorithm> ALGORITHMS = registerAlgorithms();
-
-		private static Map<String, DigestAlgorithm> registerOIDAlgorithms() {
-			final Map<String, DigestAlgorithm> map = new HashMap<String, DigestAlgorithm>();
-			for (final DigestAlgorithm digestAlgorithm : values()) {
-				map.put(digestAlgorithm.oid, digestAlgorithm);
-			}
-			return map;
-		}
-
-		private static Map<String, DigestAlgorithm> registerXMLAlgorithms() {
-			final Map<String, DigestAlgorithm> map = new HashMap<String, DigestAlgorithm>();
-			for (final DigestAlgorithm digestAlgorithm : values()) {
-				map.put(digestAlgorithm.xmlId, digestAlgorithm);
-			}
-			return map;
-		}
-
-		private static Map<String, DigestAlgorithm> registerAlgorithms() {
-			final Map<String, DigestAlgorithm> map = new HashMap<String, DigestAlgorithm>();
-			for (final DigestAlgorithm digestAlgorithm : values()) {
-				map.put(digestAlgorithm.name, digestAlgorithm);
-			}
-			return map;
-		}
-	}
+	private final String providerName;
 
 	/**
 	 * Returns the digest algorithm associated to the given JCE name.
@@ -112,7 +92,7 @@ public enum DigestAlgorithm {
 	 *             if the given name doesn't match any algorithm
 	 */
 	public static DigestAlgorithm forName(final String name) throws DSSException {
-		final DigestAlgorithm algorithm = Registry.ALGORITHMS.get(name);
+		final DigestAlgorithm algorithm = ALGORITHMS.get(name);
 		if (algorithm == null) {
 			throw new DSSException("Unsupported algorithm: " + name + "/" + name);
 		}
@@ -129,7 +109,7 @@ public enum DigestAlgorithm {
 	 * @return the corresponding {@code DigestAlgorithm} or the default value
 	 */
 	public static DigestAlgorithm forName(final String name, final DigestAlgorithm defaultValue) {
-		final DigestAlgorithm algorithm = Registry.ALGORITHMS.get(name);
+		final DigestAlgorithm algorithm = ALGORITHMS.get(name);
 		if (algorithm == null) {
 			return defaultValue;
 		}
@@ -146,7 +126,7 @@ public enum DigestAlgorithm {
 	 *             if the oid doesn't match any digest algorithm
 	 */
 	public static DigestAlgorithm forOID(final String oid) throws DSSException {
-		final DigestAlgorithm algorithm = Registry.OID_ALGORITHMS.get(oid);
+		final DigestAlgorithm algorithm = OID_ALGORITHMS.get(oid);
 		if (algorithm == null) {
 			throw new DSSException("Unsupported algorithm: " + oid);
 		}
@@ -163,7 +143,7 @@ public enum DigestAlgorithm {
 	 *             if the uri doesn't match any digest algorithm
 	 */
 	public static DigestAlgorithm forXML(final String xmlName) throws DSSException {
-		final DigestAlgorithm algorithm = Registry.XML_ALGORITHMS.get(xmlName);
+		final DigestAlgorithm algorithm = XML_ALGORITHMS.get(xmlName);
 		if (algorithm == null) {
 			throw new DSSException("Unsupported algorithm: " + xmlName);
 		}
@@ -180,23 +160,34 @@ public enum DigestAlgorithm {
 	 * @return the corresponding {@code DigestAlgorithm} or the default value
 	 */
 	public static DigestAlgorithm forXML(final String xmlName, final DigestAlgorithm defaultValue) {
-		final DigestAlgorithm algorithm = Registry.XML_ALGORITHMS.get(xmlName);
+		final DigestAlgorithm algorithm = XML_ALGORITHMS.get(xmlName);
 		if (algorithm == null) {
 			return defaultValue;
 		}
 		return algorithm;
 	}
 
-	private DigestAlgorithm(final String name, final String javaName, final String oid, final String xmlId) {
-		this(name, javaName, oid, xmlId, 0);
+	public static DigestAlgorithm register(final String name, final String javaName,
+										   final String oid, final String xmlId,
+										   final String providerName) {
+		return new DigestAlgorithm(name, javaName, oid, xmlId, providerName);
 	}
 
-	private DigestAlgorithm(final String name, final String javaName, final String oid, final String xmlId, final int saltLength) {
+	private DigestAlgorithm(final String name, final String javaName, final String oid, final String xmlId, final String providerName) {
+		this(name, javaName, oid, xmlId, 0, providerName);
+	}
+
+	private DigestAlgorithm(final String name, final String javaName, final String oid, final String xmlId, final int saltLength, final String providerName) {
 		this.name = name;
 		this.javaName = javaName;
 		this.oid = oid;
 		this.xmlId = xmlId;
 		this.saltLength = saltLength;
+		this.providerName = providerName;
+
+		OID_ALGORITHMS.put(oid, this);
+		XML_ALGORITHMS.put(xmlId, this);
+		ALGORITHMS.put(name, this);
 	}
 
 	/**
@@ -239,4 +230,38 @@ public enum DigestAlgorithm {
 		return saltLength;
 	}
 
+	public String getProviderName() {
+		return providerName;
+	}
+
+	public MessageDigest getAlgorithmInstance() throws NoSuchAlgorithmException {
+		try {
+			return MessageDigest.getInstance(getJavaName(), getProviderName());
+		} catch (NoSuchProviderException e) {
+			return MessageDigest.getInstance(getJavaName());
+		}
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		DigestAlgorithm that = (DigestAlgorithm) o;
+		return saltLength == that.saltLength &&
+			Objects.equals(name, that.name) &&
+			Objects.equals(javaName, that.javaName) &&
+			Objects.equals(oid, that.oid) &&
+			Objects.equals(xmlId, that.xmlId) &&
+			Objects.equals(providerName, that.providerName);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(name, javaName, oid, xmlId, saltLength, providerName);
+	}
+
+	@Override
+	public String toString() {
+		return name;
+	}
 }

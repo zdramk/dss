@@ -22,6 +22,7 @@ package eu.europa.esig.dss;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Objects;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -69,7 +70,7 @@ public final class Digest implements Serializable {
 			return false;
 		}
 		Digest other = (Digest) obj;
-		if (algorithm != other.algorithm) {
+		if (!Objects.equals(algorithm, other.algorithm)) {
 			return false;
 		}
 		if (!Arrays.equals(value, other.value)) {

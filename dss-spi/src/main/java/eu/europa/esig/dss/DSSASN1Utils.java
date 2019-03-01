@@ -22,7 +22,7 @@ package eu.europa.esig.dss;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.security.Security;
+import java.security.Provider;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
@@ -92,7 +92,6 @@ import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cert.ocsp.BasicOCSPResp;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.cms.SignerInformation;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.tsp.TimeStampToken;
 import org.bouncycastle.x509.extension.X509ExtensionUtil;
 import org.slf4j.Logger;
@@ -113,11 +112,7 @@ public final class DSSASN1Utils {
 
 	private static final String QC_TYPE_STATEMENT_OID = "0.4.0.1862.1.6";
 
-	private static final BouncyCastleProvider securityProvider = new BouncyCastleProvider();
-
-	static {
-		Security.addProvider(securityProvider);
-	}
+	private static Provider securityProvider = DSSProvider.getInstance();
 
 	/**
 	 * This class is an utility class and cannot be instantiated.
@@ -713,7 +708,7 @@ public final class DSSASN1Utils {
 
 	public static CertificateToken getCertificate(final X509CertificateHolder x509CertificateHolder) {
 		try {
-			JcaX509CertificateConverter converter = new JcaX509CertificateConverter().setProvider(BouncyCastleProvider.PROVIDER_NAME);
+			JcaX509CertificateConverter converter = new JcaX509CertificateConverter().setProvider(DSSProvider.PROVIDER_NAME);
 			X509Certificate x509Certificate = converter.getCertificate(x509CertificateHolder);
 			return new CertificateToken(x509Certificate);
 		} catch (CertificateException e) {

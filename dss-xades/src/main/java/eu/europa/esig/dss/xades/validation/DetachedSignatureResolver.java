@@ -3,12 +3,12 @@ package eu.europa.esig.dss.xades.validation;
 import java.util.List;
 
 import org.apache.xml.security.signature.XMLSignatureInput;
-import org.apache.xml.security.utils.resolver.ResourceResolverContext;
 import org.apache.xml.security.utils.resolver.ResourceResolverException;
 import org.apache.xml.security.utils.resolver.ResourceResolverSpi;
 import org.w3c.dom.Attr;
 
 import eu.europa.esig.dss.DSSDocument;
+import eu.europa.esig.dss.DSSException;
 import eu.europa.esig.dss.DSSUtils;
 import eu.europa.esig.dss.DigestAlgorithm;
 import eu.europa.esig.dss.DigestDocument;
@@ -31,11 +31,13 @@ public class DetachedSignatureResolver extends ResourceResolverSpi {
 	}
 
 	@Override
-	public XMLSignatureInput engineResolveURI(ResourceResolverContext context) throws ResourceResolverException {
-		DSSDocument document = getCurrentDocument(context);
+	public XMLSignatureInput engineResolve(Attr attr, String s) throws ResourceResolverException {
+		DSSDocument document = getCurrentDocument(attr, s);
 		if (document instanceof DigestDocument) {
-			DigestDocument digestDoc = (DigestDocument) document;
-			return new XMLSignatureInput(digestDoc.getDigest(digestAlgorithm));
+			throw new DSSException(
+				String.format("DigestDocument is not supported withing xmlsec 1.5.0: %s", document.getName()));
+//			DigestDocument digestDoc = (DigestDocument) document;
+//			return new PreDefinedDigestXMLSignatureInput(digestDoc.getDigest(digestAlgorithm).getBytes());
 		} else {
 			final XMLSignatureInput result = new XMLSignatureInput(document.openStream());
 			final MimeType mimeType = document.getMimeType();
@@ -46,40 +48,38 @@ public class DetachedSignatureResolver extends ResourceResolverSpi {
 		}
 	}
 
-	private DSSDocument getCurrentDocument(ResourceResolverContext context) throws ResourceResolverException {
-		if (definedFilename(context) && isDocumentNamesDefined()) {
-			Attr uriAttr = context.attr;
-			String uriValue = DSSUtils.decodeUrl(uriAttr.getNodeValue());
+	private DSSDocument getCurrentDocument(Attr attr, String baseUri) throws ResourceResolverException {
+		if (definedFilename(attr) && isDocumentNamesDefined()) {
+			String uriValue = DSSUtils.decodeUrl(attr.getNodeValue());
 			for (DSSDocument dssDocument : documents) {
 				if (Utils.areStringsEqual(dssDocument.getName(), uriValue)) {
 					return dssDocument;
 				}
 			}
-			Object[] exArgs = { "Unable to find document '" + uriValue + "' (detached signature)" };
-			throw new ResourceResolverException("generic.EmptyMessage", exArgs, uriValue, context.baseUri);
+			Object[] exArgs = {"Unable to find document '" + uriValue + "' (detached signature)"};
+			throw new ResourceResolverException("generic.EmptyMessage", exArgs, attr, baseUri);
 		}
 
 		if (Utils.collectionSize(documents) == 1) {
 			return documents.get(0);
 		}
 
-		Object[] exArgs = { "Unable to find document (detached signature)" };
-		throw new ResourceResolverException("generic.EmptyMessage", exArgs, null, context.baseUri);
+		Object[] exArgs = {"Unable to find document (detached signature)"};
+		throw new ResourceResolverException("generic.EmptyMessage", exArgs, attr, baseUri);
 
 	}
 
 	@Override
-	public boolean engineCanResolveURI(ResourceResolverContext context) {
-		return (nullURI(context) || definedFilename(context));
+	public boolean engineCanResolve(Attr attr, String s) {
+		return (nullURI(attr) || definedFilename(attr));
 	}
 
-	private boolean nullURI(ResourceResolverContext context) {
-		return context.attr == null;
+	private boolean nullURI(Attr attr) {
+		return attr == null || Utils.isStringBlank(attr.getNodeValue());
 	}
 
-	private boolean definedFilename(ResourceResolverContext context) {
-		Attr uriAttr = context.attr;
-		return uriAttr != null && Utils.isStringNotBlank(uriAttr.getNodeValue()) && !uriAttr.getNodeValue().startsWith("#");
+	private boolean definedFilename(Attr attr) {
+		return attr != null && Utils.isStringNotBlank(attr.getNodeValue()) && !attr.getNodeValue().startsWith("#");
 	}
 
 	private boolean isDocumentNamesDefined() {

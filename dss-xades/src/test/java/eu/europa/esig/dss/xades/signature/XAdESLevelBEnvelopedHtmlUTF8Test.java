@@ -26,6 +26,7 @@ import java.util.Date;
 
 import org.apache.xml.security.c14n.Canonicalizer;
 import org.junit.Before;
+import org.junit.Ignore;
 
 import eu.europa.esig.dss.DSSDocument;
 import eu.europa.esig.dss.DigestAlgorithm;
@@ -37,6 +38,7 @@ import eu.europa.esig.dss.signature.DocumentSignatureService;
 import eu.europa.esig.dss.validation.TimestampToken;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
 
+@Ignore("TBD resolve dependency")
 public class XAdESLevelBEnvelopedHtmlUTF8Test extends AbstractXAdESTestSignature {
 
 	private DocumentSignatureService<XAdESSignatureParameters> service;

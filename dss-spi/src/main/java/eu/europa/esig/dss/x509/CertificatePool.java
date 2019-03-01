@@ -240,4 +240,17 @@ public class CertificatePool implements Serializable {
 		}
 		return Collections.unmodifiableList(certificateTokenList);
 	}
+
+	public CertificateToken getIssuer(Token token) {
+		final List<CertificateToken> issuerCertList = get(token.getIssuerX500Principal());
+		for (final CertificateToken issuerCertToken : issuerCertList) {
+
+			// We keep the first issuer that signs the certificate
+			if (token.isSignedBy(issuerCertToken)) {
+
+				return issuerCertToken;
+			}
+		}
+		return null;
+	}
 }

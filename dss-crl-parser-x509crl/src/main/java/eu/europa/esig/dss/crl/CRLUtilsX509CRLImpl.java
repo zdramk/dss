@@ -5,7 +5,7 @@ import java.math.BigInteger;
 import java.security.KeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.security.Security;
+import java.security.Provider;
 import java.security.SignatureException;
 import java.security.cert.CRLException;
 import java.security.cert.CertificateException;
@@ -16,11 +16,11 @@ import java.security.cert.X509CRLEntry;
 import javax.security.auth.x500.X500Principal;
 
 import org.bouncycastle.asn1.x509.Extension;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import eu.europa.esig.dss.DSSException;
+import eu.europa.esig.dss.DSSProvider;
 import eu.europa.esig.dss.SignatureAlgorithm;
 import eu.europa.esig.dss.tsl.KeyUsageBit;
 import eu.europa.esig.dss.x509.CertificateToken;
@@ -29,20 +29,16 @@ public class CRLUtilsX509CRLImpl extends AbstractCRLUtils implements ICRLUtils {
 
 	private static final Logger LOG = LoggerFactory.getLogger(CRLUtilsX509CRLImpl.class);
 
-	private static final BouncyCastleProvider BC_PROVIDER = new BouncyCastleProvider();
+	private static final Provider securityProvider = DSSProvider.getInstance();
 
 	private static final CertificateFactory CERT_FACTORY;
 
 	static {
 		try {
-			Security.addProvider(BC_PROVIDER);
-			CERT_FACTORY = CertificateFactory.getInstance("X.509", BouncyCastleProvider.PROVIDER_NAME);
+			CERT_FACTORY = CertificateFactory.getInstance("X.509", securityProvider);
 		} catch (CertificateException e) {
 			LOG.error(e.getMessage(), e);
 			throw new DSSException("Platform does not support X509 certificate", e);
-		} catch (NoSuchProviderException e) {
-			LOG.error(e.getMessage(), e);
-			throw new DSSException("Platform does not support BouncyCastle", e);
 		}
 	}
 

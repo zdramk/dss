@@ -29,15 +29,16 @@ import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
-import java.security.Security;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
+import eu.europa.esig.dss.DSSProvider;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
 import org.bouncycastle.asn1.x509.Extension;
@@ -48,7 +49,6 @@ import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
 import org.bouncycastle.jce.ECNamedCurveTable;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
@@ -63,23 +63,17 @@ import eu.europa.esig.dss.x509.CertificateToken;
 
 public class CertificateService {
 
-	private static final BouncyCastleProvider SECURITY_PROVIDER = new BouncyCastleProvider();
-
 	private static final int MAX = Integer.MAX_VALUE;
 
-	static {
-		Security.addProvider(SECURITY_PROVIDER);
-	}
-
 	private KeyPair generateKeyPair(final EncryptionAlgorithm algorithm) throws GeneralSecurityException {
-		if (algorithm == EncryptionAlgorithm.ECDSA) {
+		if (Objects.equals(algorithm, EncryptionAlgorithm.ECDSA)) {
 			return generateECDSAKeyPair();
-		} else if (algorithm == EncryptionAlgorithm.RSA) {
-			KeyPairGenerator keyGenerator = KeyPairGenerator.getInstance("RSA", SECURITY_PROVIDER);
+		} else if (Objects.equals(algorithm, EncryptionAlgorithm.RSA)) {
+			KeyPairGenerator keyGenerator = algorithm.getAlgorithmInstance();
 			keyGenerator.initialize(2048);
 			return keyGenerator.generateKeyPair();
-		} else if (algorithm == EncryptionAlgorithm.DSA) {
-			KeyPairGenerator keyGenerator = KeyPairGenerator.getInstance("DSA", SECURITY_PROVIDER);
+		} else if (Objects.equals(algorithm, EncryptionAlgorithm.DSA)) {
+			KeyPairGenerator keyGenerator = algorithm.getAlgorithmInstance();
 			keyGenerator.initialize(1024);
 			return keyGenerator.generateKeyPair();
 		}
@@ -88,7 +82,7 @@ public class CertificateService {
 
 	private KeyPair generateECDSAKeyPair() throws GeneralSecurityException {
 		ECParameterSpec ecSpec = ECNamedCurveTable.getParameterSpec("prime256v1");
-		KeyPairGenerator generator = KeyPairGenerator.getInstance("ECDSA", SECURITY_PROVIDER);
+		KeyPairGenerator generator = EncryptionAlgorithm.ECDSA.getAlgorithmInstance();
 		generator.initialize(ecSpec, new SecureRandom());
 		return generator.generateKeyPair();
 	}
@@ -172,7 +166,7 @@ public class CertificateService {
 
 		certBuilder.addExtension(Extension.extendedKeyUsage, true, new ExtendedKeyUsage(KeyPurposeId.id_kp_timeStamping));
 
-		final ContentSigner signer = new JcaContentSignerBuilder(algorithm.getJCEId()).setProvider(BouncyCastleProvider.PROVIDER_NAME)
+		final ContentSigner signer = new JcaContentSignerBuilder(algorithm.getJCEId()).setProvider(DSSProvider.PROVIDER_NAME)
 				.build(keyPair.getPrivate());
 		final X509CertificateHolder holder = certBuilder.build(signer);
 
@@ -194,7 +188,7 @@ public class CertificateService {
 		certBuilder.addExtension(Extension.keyUsage, true, new KeyUsage(KeyUsage.keyCertSign | KeyUsage.cRLSign));
 
 		// Sign the new certificate with the private key of the trusted third
-		final ContentSigner signer = new JcaContentSignerBuilder(algorithm.getJCEId()).setProvider(BouncyCastleProvider.PROVIDER_NAME).build(issuerPrivateKey);
+		final ContentSigner signer = new JcaContentSignerBuilder(algorithm.getJCEId()).setProvider(DSSProvider.PROVIDER_NAME).build(issuerPrivateKey);
 		final X509CertificateHolder holder = certBuilder.build(signer);
 
 		final X509Certificate cert = (X509Certificate) CertificateFactory.getInstance("X509")
@@ -215,7 +209,7 @@ public class CertificateService {
 		certBuilder.addExtension(Extension.keyUsage, true, new KeyUsage(KeyUsage.keyCertSign));
 
 		// Sign the new certificate with the private key of the trusted third
-		final ContentSigner signer = new JcaContentSignerBuilder(algorithm.getJCEId()).setProvider(BouncyCastleProvider.PROVIDER_NAME).build(issuerPrivateKey);
+		final ContentSigner signer = new JcaContentSignerBuilder(algorithm.getJCEId()).setProvider(DSSProvider.PROVIDER_NAME).build(issuerPrivateKey);
 		final X509CertificateHolder holder = certBuilder.build(signer);
 
 		final X509Certificate cert = (X509Certificate) CertificateFactory.getInstance("X509")

@@ -100,7 +100,8 @@ public final class DSSXMLUtils {
 		registerCanonicalizer(Canonicalizer.ALGO_ID_C14N_OMIT_COMMENTS);
 		registerCanonicalizer(Canonicalizer.ALGO_ID_C14N_EXCL_OMIT_COMMENTS);
 		registerCanonicalizer(Canonicalizer.ALGO_ID_C14N11_OMIT_COMMENTS);
-		registerCanonicalizer(Canonicalizer.ALGO_ID_C14N_PHYSICAL);
+		// Is support by xmlsec 1.5.0
+        // registerCanonicalizer(Canonicalizer.ALGO_ID_C14N_PHYSICAL);
 		registerCanonicalizer(Canonicalizer.ALGO_ID_C14N_WITH_COMMENTS);
 		registerCanonicalizer(Canonicalizer.ALGO_ID_C14N_EXCL_WITH_COMMENTS);
 		registerCanonicalizer(Canonicalizer.ALGO_ID_C14N11_WITH_COMMENTS);

@@ -22,6 +22,7 @@ package eu.europa.esig.dss;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * This class allows to define the signature policy.
@@ -190,7 +191,7 @@ public class Policy implements Serializable {
 		} else if (!description.equals(other.description)) {
 			return false;
 		}
-		if (digestAlgorithm != other.digestAlgorithm) {
+		if (!Objects.equals(digestAlgorithm, other.digestAlgorithm)) {
 			return false;
 		}
 		if (!Arrays.equals(digestValue, other.digestValue)) {

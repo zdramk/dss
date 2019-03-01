@@ -11,6 +11,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import eu.europa.esig.dss.DSSException;
@@ -25,12 +26,24 @@ public class MultiThreadsCertificateValidatorTest {
 
 	@Test
 	public void test() throws InterruptedException, ExecutionException {
+		testImpl(50);
 
+	}
+
+
+	@Test
+	@Ignore("Too huge test")
+	public void hugeTest() throws InterruptedException, ExecutionException {
+		testImpl(1000);
+
+	}
+
+	private void testImpl(int numberOfTasks) throws InterruptedException, ExecutionException {
 		ExecutorService executor = Executors.newFixedThreadPool(50);
 
 		List<Future<CertificateReports>> futures = new ArrayList<Future<CertificateReports>>();
 
-		for (int i = 0; i < 1000; i++) {
+		for (int i = 0; i < numberOfTasks; i++) {
 			futures.add(executor.submit(new TestConcurrent(DSSUtils.loadCertificate(new File("src/test/resources/ec.europa.eu.crt")))));
 		}
 
@@ -42,7 +55,6 @@ public class MultiThreadsCertificateValidatorTest {
 		}
 
 		executor.shutdown();
-
 	}
 
 	class TestConcurrent implements Callable<CertificateReports> {

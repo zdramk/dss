@@ -21,6 +21,7 @@
 package eu.europa.esig.dss;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import javax.xml.crypto.dsig.CanonicalizationMethod;
 
@@ -108,7 +109,7 @@ public class TimestampParameters implements Serializable {
 		} else if (!canonicalizationMethod.equals(other.canonicalizationMethod)) {
 			return false;
 		}
-		if (digestAlgorithm != other.digestAlgorithm) {
+		if (!Objects.equals(digestAlgorithm, other.digestAlgorithm)) {
 			return false;
 		}
 		return true;

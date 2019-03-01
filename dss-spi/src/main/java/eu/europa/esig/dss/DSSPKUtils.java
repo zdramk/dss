@@ -20,6 +20,7 @@
  */
 package eu.europa.esig.dss;
 
+import java.lang.reflect.InvocationTargetException;
 import java.security.Key;
 import java.security.PublicKey;
 import java.security.interfaces.DSAPublicKey;
@@ -124,7 +125,12 @@ public final class DSSPKUtils {
 			DSAPublicKey dsaPublicKey = (DSAPublicKey) publicKey;
 			publicKeySize = dsaPublicKey.getParams().getP().bitLength();
 		} else {
-			LOG.error("Unknown public key infrastructure: " + publicKey.getClass().getName());
+			try {
+				publicKeySize = (int)publicKey.getClass().getMethod("getKeySize").invoke(publicKey);
+			} catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+				LOG.error("Public key doesn't support getKeySize method: " + publicKey.getClass().getName());
+				LOG.error("Unknown public key infrastructure: " + publicKey.getClass().getName());
+			}
 		}
 		return publicKeySize;
 	}

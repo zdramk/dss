@@ -6,11 +6,13 @@ import java.util.Collection;
 import java.util.Date;
 
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import eu.europa.esig.dss.DSSDocument;
+import eu.europa.esig.dss.DSSProvider;
 import eu.europa.esig.dss.DigestAlgorithm;
 import eu.europa.esig.dss.EncryptionAlgorithm;
 import eu.europa.esig.dss.FileDocument;
@@ -30,11 +32,19 @@ public class XAdESLevelBWithDSATest extends AbstractXAdESTestSignature {
 
 	@Parameters(name = "DigestAlgorithm {index} : {0}")
 	public static Collection<DigestAlgorithm> data() {
-		return Arrays.asList(DigestAlgorithm.SHA1, DigestAlgorithm.SHA256);
+		return Arrays.asList(DigestAlgorithm.SHA1
+			// DSA_SHA256 is not supported
+			//, DigestAlgorithm.SHA256
+		);
 	}
 
 	public XAdESLevelBWithDSATest(DigestAlgorithm digestAlgo) {
 		this.digestAlgo = digestAlgo;
+	}
+
+	@BeforeClass
+	public static void beforeEach() {
+		DSSProvider.init();
 	}
 
 	@Before

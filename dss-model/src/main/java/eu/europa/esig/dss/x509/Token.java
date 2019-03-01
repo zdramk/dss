@@ -253,7 +253,7 @@ public abstract class Token implements Serializable {
 		byte[] digestValue = digests.get(digestAlgorithm);
 		if (digestValue == null) {
 			try {
-				MessageDigest md = MessageDigest.getInstance(digestAlgorithm.getJavaName());
+				MessageDigest md = digestAlgorithm.getAlgorithmInstance();
 				digestValue = md.digest(getEncoded());
 				digests.put(digestAlgorithm, digestValue);
 			} catch (Exception e) {

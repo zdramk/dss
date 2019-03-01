@@ -22,11 +22,14 @@ package eu.europa.esig.dss.test.gen;
 
 import static org.junit.Assert.assertNotNull;
 
+import java.security.Provider;
 import java.security.SignatureException;
 import java.security.cert.X509Certificate;
 
+import eu.europa.esig.dss.DSSProvider;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.tsp.TSPUtil;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import eu.europa.esig.dss.SignatureAlgorithm;
@@ -34,6 +37,8 @@ import eu.europa.esig.dss.token.DSSPrivateKeyEntry;
 import eu.europa.esig.dss.x509.CertificateToken;
 
 public class CertificateServiceTest {
+
+	private static final Provider securityProvider = DSSProvider.getInstance();
 
 	private CertificateService service = new CertificateService();
 

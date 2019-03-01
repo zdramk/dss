@@ -6,11 +6,13 @@ import java.util.Collection;
 import java.util.Date;
 
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import eu.europa.esig.dss.DSSDocument;
+import eu.europa.esig.dss.DSSProvider;
 import eu.europa.esig.dss.DigestAlgorithm;
 import eu.europa.esig.dss.EncryptionAlgorithm;
 import eu.europa.esig.dss.FileDocument;
@@ -28,10 +30,19 @@ public class XAdESLevelBWithECDSATest extends AbstractXAdESTestSignature {
 
 	private final DigestAlgorithm digestAlgo;
 
+	@BeforeClass
+	public static void beforeEach() {
+		DSSProvider.init();
+	}
+
 	@Parameters(name = "DigestAlgorithm {index} : {0}")
 	public static Collection<DigestAlgorithm> data() {
-		return Arrays.asList(DigestAlgorithm.SHA1, DigestAlgorithm.SHA224, DigestAlgorithm.SHA256, DigestAlgorithm.SHA384, DigestAlgorithm.SHA512,
-				DigestAlgorithm.RIPEMD160);
+		return Arrays.asList(DigestAlgorithm.SHA1, DigestAlgorithm.SHA256, DigestAlgorithm.SHA384, DigestAlgorithm.SHA512
+            //algorithm http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha224 is not supported
+			//, DigestAlgorithm.SHA224
+            //algorithm http://www.w3.org/2007/05/xmldsig-more#ecdsa-ripemd160 is not supported
+            //, DigestAlgorithm.RIPEMD160
+		);
 	}
 
 	public XAdESLevelBWithECDSATest(DigestAlgorithm digestAlgo) {

@@ -5,7 +5,7 @@
 
 	<groupId>eu.europa.ec.joinup.sd-dss</groupId>
 	<artifactId>sd-dss</artifactId>
-	<version>5.3.2</version>
+	<version>5.3.2-1.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Digital Signature Services</name>
 
@@ -42,15 +42,15 @@
 	</developers>
 
 	<properties>
-		<project.source.version>1.7</project.source.version>
-		<project.target.version>1.7</project.target.version>
+		<project.source.version>1.8</project.source.version>
+		<project.target.version>1.8</project.target.version>
 		<project.encoding>UTF-8</project.encoding>
 
 		<slf4j.version>1.7.25</slf4j.version>
 		<logback-classic.version>1.2.3</logback-classic.version>
 
-		<bouncycastle.version>1.59</bouncycastle.version>
-		<xmlsec.version>2.0.10</xmlsec.version>
+		<bouncycastle.version>1.60</bouncycastle.version>
+		<xmlsec.version>1.5.0</xmlsec.version>
 		<pdfbox.version>2.0.12</pdfbox.version>
 		<httpclient.version>4.5.5</httpclient.version>
 		<rs-api.version>2.0.1</rs-api.version>
@@ -583,7 +583,6 @@
 				<artifactId>javax.ws.rs-api</artifactId>
 				<version>${rs-api.version}</version>
 			</dependency>
-			
 			<dependency>
 				<groupId>org.apache.httpcomponents</groupId>
 				<artifactId>httpclient</artifactId>

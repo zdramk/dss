@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import eu.europa.esig.dss.DSSDocument;
@@ -42,6 +43,7 @@ import eu.europa.esig.dss.validation.reports.Reports;
 import eu.europa.esig.dss.validation.reports.wrapper.DiagnosticData;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
 
+@Ignore("DigestDocument is not supported withing xmlsec 1.5.0: null")
 public class XAdESLevelBDetachedDigestDocumentTest extends PKIFactoryAccess {
 
 	private static final String DOCUMENT_NAME = "test.text";

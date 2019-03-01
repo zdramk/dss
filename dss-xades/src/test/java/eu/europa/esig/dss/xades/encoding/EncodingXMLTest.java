@@ -6,17 +6,18 @@ import static org.junit.Assert.assertTrue;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.security.Security;
+import java.security.Provider;
 import java.security.Signature;
 import java.util.Arrays;
 
 import javax.xml.bind.DatatypeConverter;
 
 import org.apache.xml.security.algorithms.implementations.SignatureECDSA;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.Test;
 
+import eu.europa.esig.dss.DSSProvider;
 import eu.europa.esig.dss.EncryptionAlgorithm;
+import eu.europa.esig.dss.SignatureAlgorithm;
 import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.xades.signature.DSSSignatureUtils;
 
@@ -24,9 +25,7 @@ public class EncodingXMLTest {
 
 	private static final String HELLO_WORLD = "Hello World";
 
-	static {
-		Security.addProvider(new BouncyCastleProvider());
-	}
+	private static Provider securityProvider = DSSProvider.getInstance();
 
 	@Test
 	public void test() throws Exception {
@@ -42,10 +41,10 @@ public class EncodingXMLTest {
 
 	@Test
 	public void testDSA() throws Exception {
-		KeyPairGenerator gen = KeyPairGenerator.getInstance("DSA", BouncyCastleProvider.PROVIDER_NAME);
+		KeyPairGenerator gen = EncryptionAlgorithm.DSA.getAlgorithmInstance();
 		KeyPair pair = gen.generateKeyPair();
 
-		Signature s = Signature.getInstance("SHA256withDSA", BouncyCastleProvider.PROVIDER_NAME);
+		Signature s = SignatureAlgorithm.DSA_SHA256.getAlgorithmInstance();
 		s.initSign(pair.getPrivate());
 		s.update(HELLO_WORLD.getBytes());
 		byte[] signatureValue = s.sign();
@@ -56,10 +55,10 @@ public class EncodingXMLTest {
 
 	@Test
 	public void testRSA() throws Exception {
-		KeyPairGenerator gen = KeyPairGenerator.getInstance("RSA", BouncyCastleProvider.PROVIDER_NAME);
+		KeyPairGenerator gen = EncryptionAlgorithm.DSA.getAlgorithmInstance();
 		KeyPair pair = gen.generateKeyPair();
 
-		Signature s = Signature.getInstance("SHA256withRSA", BouncyCastleProvider.PROVIDER_NAME);
+		Signature s = SignatureAlgorithm.DSA_SHA256.getAlgorithmInstance();
 		s.initSign(pair.getPrivate());
 		s.update(HELLO_WORLD.getBytes());
 		byte[] binary = s.sign();
@@ -68,11 +67,11 @@ public class EncodingXMLTest {
 
 	@Test
 	public void testDSA2048() throws Exception {
-		KeyPairGenerator gen = KeyPairGenerator.getInstance("DSA", BouncyCastleProvider.PROVIDER_NAME);
-		gen.initialize(2048); // works with 4096 too but it takes lot of time
+		KeyPairGenerator gen = EncryptionAlgorithm.DSA.getAlgorithmInstance();
+		gen.initialize(1024); // works with 4096 too but it takes lot of time
 		KeyPair pair = gen.generateKeyPair();
 
-		Signature s = Signature.getInstance("SHA256withDSA", BouncyCastleProvider.PROVIDER_NAME);
+		Signature s = SignatureAlgorithm.DSA_SHA256.getAlgorithmInstance();
 		s.initSign(pair.getPrivate());
 		s.update(HELLO_WORLD.getBytes());
 		byte[] signatureValue = s.sign();
@@ -81,10 +80,10 @@ public class EncodingXMLTest {
 
 	@Test
 	public void testECDSA() throws Exception {
-		KeyPairGenerator gen = KeyPairGenerator.getInstance("ECDSA", BouncyCastleProvider.PROVIDER_NAME);
+		KeyPairGenerator gen = EncryptionAlgorithm.ECDSA.getAlgorithmInstance();
 		KeyPair pair = gen.generateKeyPair();
 
-		Signature s = Signature.getInstance("SHA256withECDSA", BouncyCastleProvider.PROVIDER_NAME);
+		Signature s = SignatureAlgorithm.ECDSA_SHA256.getAlgorithmInstance();
 		s.initSign(pair.getPrivate());
 		s.update(HELLO_WORLD.getBytes());
 		byte[] signatureValue = s.sign();
@@ -94,7 +93,7 @@ public class EncodingXMLTest {
 
 		byte[] asn1xmlsec = SignatureECDSA.convertXMLDSIGtoASN1(convertToXmlDSig);
 
-		Signature s2 = Signature.getInstance("SHA256withECDSA", BouncyCastleProvider.PROVIDER_NAME);
+		Signature s2 = SignatureAlgorithm.ECDSA_SHA256.getAlgorithmInstance();
 		s2.initVerify(pair.getPublic());
 		s2.update(HELLO_WORLD.getBytes());
 		assertTrue(s2.verify(asn1xmlsec));
@@ -102,12 +101,11 @@ public class EncodingXMLTest {
 
 	@Test
 	public void testECDSA192() throws Exception {
-		Security.addProvider(new BouncyCastleProvider());
-		KeyPairGenerator gen = KeyPairGenerator.getInstance("ECDSA", BouncyCastleProvider.PROVIDER_NAME);
+		KeyPairGenerator gen = EncryptionAlgorithm.ECDSA.getAlgorithmInstance();
 		gen.initialize(192);
 		KeyPair pair = gen.generateKeyPair();
 
-		Signature s = Signature.getInstance("SHA256withECDSA", BouncyCastleProvider.PROVIDER_NAME);
+		Signature s = SignatureAlgorithm.ECDSA_SHA256.getAlgorithmInstance();
 		s.initSign(pair.getPrivate());
 		s.update(HELLO_WORLD.getBytes());
 		byte[] signatureValue = s.sign();
@@ -117,7 +115,7 @@ public class EncodingXMLTest {
 
 		byte[] asn1xmlsec = SignatureECDSA.convertXMLDSIGtoASN1(convertToXmlDSig);
 
-		Signature s2 = Signature.getInstance("SHA256withECDSA", BouncyCastleProvider.PROVIDER_NAME);
+		Signature s2 = SignatureAlgorithm.ECDSA_SHA256.getAlgorithmInstance();
 		s2.initVerify(pair.getPublic());
 		s2.update(HELLO_WORLD.getBytes());
 		assertTrue(s2.verify(asn1xmlsec));

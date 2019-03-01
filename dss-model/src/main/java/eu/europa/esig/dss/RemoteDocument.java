@@ -22,6 +22,7 @@ package eu.europa.esig.dss;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * This class is used to transport a DSSDocument with SOAP and/or REST
@@ -137,7 +138,7 @@ public class RemoteDocument implements Serializable {
 		RemoteDocument other = (RemoteDocument) obj;
 		if (!Arrays.equals(bytes, other.bytes))
 			return false;
-		if (digestAlgorithm != other.digestAlgorithm)
+		if (!Objects.equals(digestAlgorithm, other.digestAlgorithm))
 			return false;
 		if (mimeType == null) {
 			if (other.mimeType != null)

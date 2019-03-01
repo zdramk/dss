@@ -14,6 +14,7 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import eu.europa.esig.dss.DSSProvider;
 import eu.europa.esig.dss.DigestAlgorithm;
 import eu.europa.esig.dss.FileDocument;
 import eu.europa.esig.dss.SignatureAlgorithm;
@@ -33,6 +34,8 @@ public class SignatureTest {
 
 	@BeforeClass
 	public static void init() throws Exception {
+		DSSProvider.init();
+
 		File original = new File("target/large-file.bin");
 		BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(original));
 		byte[] data = new byte[1024];
@@ -83,7 +86,7 @@ public class SignatureTest {
 		testWithDigestAlgo(privateKeyEntry, DigestAlgorithm.SHA384);
 		testWithDigestAlgo(privateKeyEntry, DigestAlgorithm.SHA512);
 		testWithDigestAlgo(privateKeyEntry, DigestAlgorithm.RIPEMD160);
-		// testWithDigestAlgo(privateKeyEntry, DigestAlgorithm.MD2); not supported
+	 	testWithDigestAlgo(privateKeyEntry, DigestAlgorithm.MD2);
 		testWithDigestAlgo(privateKeyEntry, DigestAlgorithm.MD5);
 	}
 

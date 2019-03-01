@@ -4,10 +4,12 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 
-import org.apache.xml.security.utils.resolver.ResourceResolverContext;
+import org.apache.xml.security.signature.XMLSignatureInput;
+import org.apache.xml.security.utils.resolver.ResourceResolverException;
 import org.apache.xml.security.utils.resolver.implementations.ResolverFragment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Attr;
 
 import eu.europa.esig.dss.utils.Utils;
 
@@ -18,8 +20,13 @@ public class EnforcedResolverFragment extends ResolverFragment {
 	private static final String XPATH_CHAR_FILTER = "()='[]:,*/ ";
 
 	@Override
-	public boolean engineCanResolveURI(ResourceResolverContext context) {
-		return super.engineCanResolveURI(context) && checkValueForXpathInjection(context.uriToResolve);
+	public XMLSignatureInput engineResolve(Attr uri, String baseURI) throws ResourceResolverException {
+		return super.engineResolve(uri, baseURI);
+	}
+
+	@Override
+	public boolean engineCanResolve(Attr uri, String baseURI) {
+		return super.engineCanResolve(uri, baseURI) && checkValueForXpathInjection(uri.getValue());
 	}
 
 	/**

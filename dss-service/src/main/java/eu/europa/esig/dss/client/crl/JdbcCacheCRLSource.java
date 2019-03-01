@@ -248,7 +248,7 @@ public class JdbcCacheCRLSource implements CRLSource {
 				CRLValidity cached = new CRLValidity();
 				cached.setKey(rs.getString(SQL_FIND_QUERY_ID));
 				cached.setCrlEncoded(rs.getBytes(SQL_FIND_QUERY_DATA));
-				cached.setSignatureAlgorithm(SignatureAlgorithm.valueOf(rs.getString(SQL_FIND_QUERY_SIGNATURE_ALGO)));
+				cached.setSignatureAlgorithm(SignatureAlgorithm.forName(rs.getString(SQL_FIND_QUERY_SIGNATURE_ALGO)));
 				cached.setThisUpdate(rs.getTimestamp(SQL_FIND_QUERY_THIS_UPDATE));
 				cached.setNextUpdate(rs.getTimestamp(SQL_FIND_QUERY_NEXT_UPDATE));
 				cached.setExpiredCertsOnCRL(rs.getTimestamp(SQL_FIND_QUERY_EXPIRED_CERTS_ON_CRL));
@@ -272,7 +272,7 @@ public class JdbcCacheCRLSource implements CRLSource {
 	 *
 	 * @param key
 	 *            the key
-	 * @param encoded
+	 * @param token
 	 *            the encoded CRL
 	 * @throws java.sql.SQLException
 	 */
@@ -288,7 +288,7 @@ public class JdbcCacheCRLSource implements CRLSource {
 
 			s.setBytes(2, token.getCrlEncoded());
 
-			s.setString(3, token.getSignatureAlgorithm().name());
+			s.setString(3, token.getSignatureAlgorithm().getName());
 
 			if (token.getThisUpdate() != null) {
 				s.setTimestamp(4, new Timestamp(token.getThisUpdate().getTime()));
@@ -325,7 +325,7 @@ public class JdbcCacheCRLSource implements CRLSource {
 	 *
 	 * @param key
 	 *            the key
-	 * @param encoded
+	 * @param token
 	 *            the encoded CRL
 	 * @throws java.sql.SQLException
 	 */
@@ -338,7 +338,7 @@ public class JdbcCacheCRLSource implements CRLSource {
 			s = c.prepareStatement(SQL_FIND_UPDATE);
 			s.setBytes(1, token.getCrlEncoded());
 
-			s.setString(2, token.getSignatureAlgorithm().name());
+			s.setString(2, token.getSignatureAlgorithm().getName());
 
 			if (token.getThisUpdate() != null) {
 				s.setTimestamp(3, new Timestamp(token.getThisUpdate().getTime()));

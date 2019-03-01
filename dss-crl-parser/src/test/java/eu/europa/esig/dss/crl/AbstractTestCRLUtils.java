@@ -9,14 +9,15 @@ import static org.junit.Assert.assertTrue;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.math.BigInteger;
-import java.security.NoSuchProviderException;
+import java.security.Provider;
 import java.security.Security;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509CRLEntry;
 import java.security.cert.X509Certificate;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import eu.europa.esig.dss.DSSProvider;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import eu.europa.esig.dss.DSSException;
@@ -25,18 +26,15 @@ import eu.europa.esig.dss.x509.CertificateToken;
 
 public abstract class AbstractTestCRLUtils {
 
-	private static final BouncyCastleProvider securityProvider = new BouncyCastleProvider();
+	private static final Provider securityProvider = DSSProvider.getInstance();
 
 	private static final CertificateFactory certificateFactory;
 
 	static {
 		try {
-			Security.addProvider(securityProvider);
-			certificateFactory = CertificateFactory.getInstance("X.509", BouncyCastleProvider.PROVIDER_NAME);
+			certificateFactory = CertificateFactory.getInstance("X.509", securityProvider);
 		} catch (CertificateException e) {
 			throw new DSSException("Platform does not support X509 certificate", e);
-		} catch (NoSuchProviderException e) {
-			throw new DSSException("Platform does not support BouncyCastle", e);
 		}
 	}
 
@@ -218,8 +216,8 @@ public abstract class AbstractTestCRLUtils {
 		}
 	}
 
-	// @Ignore
 	@Test
+	@Ignore("Too huge test")
 	public void testHugeCRL() throws Exception {
 		try (InputStream is = AbstractTestCRLUtils.class.getResourceAsStream("/esteid2011.crl");
 				InputStream isCer = AbstractTestCRLUtils.class.getResourceAsStream("/ESTEID-SK_2011.der.crt")) {

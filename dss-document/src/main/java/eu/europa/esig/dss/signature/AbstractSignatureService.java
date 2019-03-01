@@ -20,10 +20,7 @@
  */
 package eu.europa.esig.dss.signature;
 
-import java.security.Security;
 import java.util.Date;
-
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import eu.europa.esig.dss.AbstractSignatureParameters;
 import eu.europa.esig.dss.DSSException;
@@ -35,10 +32,6 @@ import eu.europa.esig.dss.x509.tsp.TSPSource;
  *
  */
 public abstract class AbstractSignatureService<SP extends AbstractSignatureParameters> implements DocumentSignatureService<SP> {
-
-	static {
-		Security.addProvider(new BouncyCastleProvider());
-	}
 
 	protected TSPSource tspSource;
 

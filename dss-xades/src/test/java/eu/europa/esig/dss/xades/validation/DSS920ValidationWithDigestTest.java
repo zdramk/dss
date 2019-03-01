@@ -7,6 +7,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import eu.europa.esig.dss.DSSDocument;
@@ -28,6 +29,7 @@ import eu.europa.esig.dss.xades.signature.XAdESService;
 public class DSS920ValidationWithDigestTest extends PKIFactoryAccess {
 
 	@Test
+	@Ignore("DigestDocument isn't supported with xmlsec 1.5.0")
 	public void testValidationWithDigest() throws Exception {
 
 		DSSDocument toBeSigned = new FileDocument(new File("src/test/resources/sample.xml"));

@@ -282,7 +282,7 @@ public class CAdESLevelBTest extends AbstractPkiFactoryTestDocumentSignatureServ
 			logger.info("Decrypted Base64 : " + decryptedDigestEncodeBase64);
 
 			byte[] encoded = signedInfo.getAuthenticatedAttributes().getEncoded();
-			MessageDigest messageDigest = MessageDigest.getInstance(DigestAlgorithm.SHA256.getName());
+			MessageDigest messageDigest = DigestAlgorithm.SHA256.getAlgorithmInstance();
 			byte[] digestOfAuthenticatedAttributes = messageDigest.digest(encoded);
 
 			String computedDigestEncodeBase64 = Utils.toBase64(digestOfAuthenticatedAttributes);

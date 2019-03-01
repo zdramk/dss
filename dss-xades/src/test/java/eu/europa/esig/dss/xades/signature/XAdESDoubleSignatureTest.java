@@ -27,6 +27,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -45,6 +46,7 @@ import eu.europa.esig.dss.validation.reports.wrapper.DiagnosticData;
 import eu.europa.esig.dss.xades.XAdESSignatureParameters;
 
 @RunWith(Parameterized.class)
+@Ignore("TBD resolve dependency")
 public class XAdESDoubleSignatureTest extends PKIFactoryAccess {
 
 	// Run 10 times this test

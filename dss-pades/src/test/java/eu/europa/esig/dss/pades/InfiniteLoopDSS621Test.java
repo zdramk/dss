@@ -30,7 +30,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.math.BigInteger;
-import java.security.Security;
+import java.security.Provider;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,14 +57,15 @@ import org.bouncycastle.asn1.pkcs.Attribute;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.x509.DigestInfo;
 import org.bouncycastle.cert.X509CertificateHolder;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.encoders.Hex;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import eu.europa.esig.dss.DSSASN1Utils;
 import eu.europa.esig.dss.DSSDocument;
+import eu.europa.esig.dss.DSSProvider;
 import eu.europa.esig.dss.DSSUtils;
 import eu.europa.esig.dss.DigestAlgorithm;
 import eu.europa.esig.dss.EncryptionAlgorithm;
@@ -84,9 +85,7 @@ public class InfiniteLoopDSS621Test {
 
 	private static final String FILE_PATH = "src/test/resources/validation/pades-5-signatures-and-1-document-timestamp.pdf";
 
-	static {
-		Security.addProvider(new BouncyCastleProvider());
-	}
+	private Provider securityProvider = DSSProvider.getInstance();
 
 	@Test(timeout = 5000)
 	public void testReadTimestamp1() throws Exception {

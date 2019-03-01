@@ -20,6 +20,7 @@
  */
 package eu.europa.esig.dss.xades.validation;
 
+import java.security.Provider;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,6 +50,7 @@ public class XAdESCertificateSource extends SignatureCertificateSource {
 	private final Element signatureElement;
 
 	private final XPathQueryHolder xPathQueryHolder;
+	private final Provider securityProvider;
 
 	private List<CertificateToken> keyInfoCerts;
 
@@ -65,10 +67,16 @@ public class XAdESCertificateSource extends SignatureCertificateSource {
 	 *            adapted {@code XPathQueryHolder}
 	 * @param certificatePool
 	 *            {@code CertificatePool} to use to declare the found certificates
+	 * @param securityProvider custom security provider
 	 */
-	public XAdESCertificateSource(final Element signatureElement, final XPathQueryHolder xPathQueryHolder, final CertificatePool certificatePool) {
+	public XAdESCertificateSource(final Element signatureElement,
+								  final XPathQueryHolder xPathQueryHolder,
+								  final CertificatePool certificatePool,
+								  final Provider securityProvider) {
 
 		super(certificatePool);
+		this.securityProvider = securityProvider;
+
 		if (signatureElement == null) {
 
 			throw new NullPointerException();
@@ -108,7 +116,7 @@ public class XAdESCertificateSource extends SignatureCertificateSource {
 
 			final byte[] derEncoded = Utils.fromBase64(certificateElement.getTextContent());
 			try {
-				final CertificateToken cert = DSSUtils.loadCertificate(derEncoded);
+				final CertificateToken cert = DSSUtils.loadCertificate(derEncoded, securityProvider);
 				final CertificateToken certToken = addCertificate(cert);
 				if (!list.contains(certToken)) {
 

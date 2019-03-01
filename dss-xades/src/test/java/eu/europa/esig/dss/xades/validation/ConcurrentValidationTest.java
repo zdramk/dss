@@ -10,6 +10,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import eu.europa.esig.dss.DSSDocument;
@@ -27,7 +28,17 @@ public class ConcurrentValidationTest {
 
 	@Test
 	public void test() throws InterruptedException, ExecutionException {
+		testImpl(20);
+	}
 
+
+	@Test
+	@Ignore
+	public void testHuge() throws InterruptedException, ExecutionException {
+		testImpl(200);
+	}
+
+	private void testImpl(int numberOfTasks) throws InterruptedException, ExecutionException {
 		ExecutorService executor = Executors.newFixedThreadPool(20);
 
 		CommonCertificateVerifier certificateVerifier = new CommonCertificateVerifier();
@@ -36,7 +47,7 @@ public class ConcurrentValidationTest {
 
 		List<Future<Boolean>> futures = new ArrayList<Future<Boolean>>();
 
-		for (int i = 0; i < 200; i++) {
+		for (int i = 0; i < numberOfTasks; i++) {
 			futures.add(executor.submit(new TestConcurrent(certificateVerifier)));
 		}
 

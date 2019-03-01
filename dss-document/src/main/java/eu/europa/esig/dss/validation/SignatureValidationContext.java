@@ -195,8 +195,7 @@ public class SignatureValidationContext implements ValidationContext {
 			 */
 			return token.getIssuerToken();
 		}
-		final X500Principal issuerX500Principal = token.getIssuerX500Principal();
-		CertificateToken issuerCertificateToken = getIssuerFromPool(token, issuerX500Principal);
+		CertificateToken issuerCertificateToken = getIssuerFromPool(token);
 
 		if ((issuerCertificateToken == null) && (token instanceof CertificateToken)) {
 
@@ -250,22 +249,15 @@ public class SignatureValidationContext implements ValidationContext {
 	 *
 	 * @param token
 	 *            token for which the issuer have to be found
-	 * @param issuerX500Principal
-	 *            issuer's subject distinguished name
 	 * @return the corresponding {@code CertificateToken} or null if not found
 	 */
-	private CertificateToken getIssuerFromPool(final Token token, final X500Principal issuerX500Principal) {
-
-		final List<CertificateToken> issuerCertList = validationCertificatePool.get(issuerX500Principal);
-		for (final CertificateToken issuerCertToken : issuerCertList) {
-
-			// We keep the first issuer that signs the certificate
-			if (token.isSignedBy(issuerCertToken)) {
-
-				return issuerCertToken;
-			}
+	private CertificateToken getIssuerFromPool(final Token token) {
+		final CertificateToken issuerCertToken = validationCertificatePool.getIssuer(token);
+		if (issuerCertToken != null && token.isSignedBy(issuerCertToken)) {
+			return issuerCertToken;
+		} else {
+			return null;
 		}
-		return null;
 	}
 
 	/**
